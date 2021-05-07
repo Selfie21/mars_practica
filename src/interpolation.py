@@ -9,17 +9,13 @@ import cagd.scene_2d as scene_2d
 #you can use this to test your implementation of the de-boor algorithm 
 #    and the knot_index function
 example_spline = spline(3)
-example_spline.control_points = [vec2(0,0), vec2(0,1), vec2(1,1), vec2(1, 0), vec2(2,0)]
-example_spline.knots = knots(9)
-example_spline.knots.knots = [0, 0, 0, 0, 1, 2, 2, 2, 2]
+example_spline.control_points = [vec2(0,0), vec2(1,1), vec2(2,2), vec2(3, 3), vec2(4,4), vec2(5,5), vec2(6,6)]
+example_spline.knots = knots(11)
+example_spline.knots.knots = [0, 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1, 1]
+example_spline.de_boor(0.4, 1)
 p = example_spline.get_polyline_from_control_points()
 p.set_color("red")
 
-knots = knots(5)
-knots.knots = [0, 0, 0, 3, 4]
-print(knots.knots)
-print(knots.validate())
-print(knots.knot_index(4))
 
 
 #interpolate six points with the four different interpolation options to

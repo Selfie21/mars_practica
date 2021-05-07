@@ -1,4 +1,6 @@
 .idea/
 .vs/
+__pycache__/
 
+src/test.py
 questions.txt

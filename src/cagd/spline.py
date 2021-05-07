@@ -52,28 +52,31 @@ class spline:
     def set_color(self, color):
         self.color = color
 
-    #calculates the de_boor scheme at a given value t
+    #calculates the de_boor scheme at a given value u
     #stops when the column is only "stop" elements long
     #returns that column as a list
-    def de_boor(self, t, stop):
+    def de_boor(self, u, stop):
         n = self.degree
         t = self.knots
-        i = self.knots.knot_index(t)
-        k = 0
+        i = self.knots.knot_index(u)
         j = i - n
 
-        offset = len_points = n
-        d_length = int((n+1 * n+2)/2)
+        offset = n+1
+        len_points = n
+        d_length = int(((n+1) * (n+2))/2)
         assert i >= n and i+n < len(self.knots)
-        d = [0 for tmp in range(0, d_length)]
-        d = [self.control_points[j+tmp] for tmp in range(0, i+n)]
+        d = [0] * d_length
+        for tmp in range(0, offset):
+            d[tmp] = self.control_points[j+tmp]
 
-        for k in range(0, n-stop):
-            for j in range((i-n), (i-n)+len_points):
-                alpha = (t - t[j+k]) / (t[j+n+1] - t[j+k])
-                d[j] = (1-alpha) * d[j-offset] + (alpha * d[j+1-offset])
-#        offset = len_points = (k+1)*n
-        assert False, "Function not implemented"
+        for k in range(1, n+1):
+            for tmpj in range(len_points):
+                j = i-n+tmpj
+                alpha = (u - t[j+k]) / (t[j+n+1] - t[j+k])
+                d[tmpj + offset] = (1-alpha) * d[tmpj+offset-len_points-1] + (alpha * d[tmpj+offset-len_points])
+            offset += len_points
+            len_points -= 1
+        return d[offset-1]
 
     #adjusts the control points such that it represents the same function,
     #but with an added knot
