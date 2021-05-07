@@ -56,7 +56,6 @@ class spline:
     #stops when the column is only "stop" elements long
     #returns that column as a list
     def de_boor(self, t, stop):
-
         n = self.degree
         t = self.knots
         i = self.knots.knot_index(t)
@@ -70,11 +69,9 @@ class spline:
         d = [self.control_points[j+tmp] for tmp in range(0, i+n)]
 
         for k in range(0, n-stop):
-        for j in range((i-n), (i-n)+len_points):
-            alpha = (t - t[j+k]) / (t[j+n+1] - t[j+k])
-            d[j] = (1-alpha) * d[j-offset] + (alpha * d[j+1-offset])
-
-
+            for j in range((i-n), (i-n)+len_points):
+                alpha = (t - t[j+k]) / (t[j+n+1] - t[j+k])
+                d[j] = (1-alpha) * d[j-offset] + (alpha * d[j+1-offset])
 #        offset = len_points = (k+1)*n
         assert False, "Function not implemented"
 

@@ -16,7 +16,7 @@ p = example_spline.get_polyline_from_control_points()
 p.set_color("red")
 
 knots = knots(5)
-knots.knots = [0,0,0,3,4]
+knots.knots = [0, 0, 0, 3, 4]
 print(knots.knots)
 print(knots.validate())
 print(knots.knot_index(4))
