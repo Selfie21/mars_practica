@@ -15,6 +15,13 @@ example_spline.knots.knots = [0, 0, 0, 0, 1, 2, 2, 2, 2]
 p = example_spline.get_polyline_from_control_points()
 p.set_color("red")
 
+knots = knots(5)
+knots.knots = [0,0,0,3,4]
+print(knots.knots)
+print(knots.validate())
+print(knots.knot_index(4))
+
+
 #interpolate six points with the four different interpolation options to
 #    draw a small letter "e"
 #uncomment these lines once you implemented the spline interpolation
