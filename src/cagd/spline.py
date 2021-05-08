@@ -70,15 +70,15 @@ class spline:
             d[tmp] = self.control_points[j+tmp]
 
         for k in range(1, n+1):
-            if len_points < stop:
-                return d[offset - (len_points + 1):offset]
             for tmpj in range(len_points):
                 j = i-n+tmpj
                 alpha = (u - t[j+k]) / (t[j+n+1] - t[j+k])
                 d[tmpj + offset] = (1-alpha) * d[tmpj+offset-len_points-1] + (alpha * d[tmpj+offset-len_points])
             offset += len_points
             len_points -= 1
-        return d[offset-1]
+
+            if len_points < stop:
+                return d[offset - (len_points + 1):offset]
 
     #adjusts the control points such that it represents the same function,
     #but with an added knot
