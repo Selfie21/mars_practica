@@ -1,4 +1,5 @@
 #! /usr/bin/python
+import operator
 
 from cagd.vec import vec2, vec3
 from cagd.polyline import polyline
@@ -123,9 +124,47 @@ class spline:
             
     #generates a spline that interpolates the given points using the given mode
     #returns that spline object
-    def interpolate_cubic(mode, points):
+    def interpolate_cubic(self, mode, points):
+        interpolation_knots = self.initialize_knots(points)
+        interval = points[-1].x - points[0].x
+        m = len(interpolation_knots) - 1
+
+        if mode == 0:
+            equidistance = interval / m
+            for i in range(1, m):
+                interpolation_knots[i] = interpolation_knots[i - 1] + equidistance
+            print("EQUIDISTANT KNOTS: " + str(interpolation_knots))
+        elif mode == 1:
+            for i in range(1, m):
+                a = points[i - 1]
+                b = points[i]
+                interpolation_knots[i] = self.euklidian_norm(a, b) + interpolation_knots[i - 1]
+            print("INTERPOLATION_CHORDAL KNOTS: " + str(interpolation_knots))
+        elif mode == 2:
+            for i in range(1, m):
+                a = points[i - 1]
+                b = points[i]
+                interpolation_knots[i] = sqrt(self.euklidian_norm(a, b) + interpolation_knots[i - 1])
+            print("INTERPOLATION_CENTRIPETAL KNOTS: " + str(interpolation_knots))
+        elif mode == 3:
+            print("")
         pass
 
+    #sorts points and intializes them with first and last point
+    def initialize_knots(self, points):
+        points.sort(key=operator.attrgetter('x'))
+        tmp_knots = [0] * len(points)
+        tmp_knots[0] = points[0].x
+        tmp_knots[-1] = points[-1].x
+        return tmp_knots
+
+    def euklidian_norm(self, a, b):
+        return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
+
+    def angle(self, a, b):
+        vector_product = a.x * b.x + a.y * b.y
+        cosx = vector_product / (self.euklidian_norm(a, a) * self.euklidian_norm(b, b))
+        return acos(cosx)
 
     #generates a spline that interpolates the given points and fulfills the definition
     #of a periodic spline
