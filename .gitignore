@@ -3,4 +3,5 @@
 __pycache__/
 
 src/test.py
+src/test.png
 questions.txt
