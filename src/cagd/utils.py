@@ -10,22 +10,18 @@ from cagd.vec import vec2
 #a = diag1 b = diag2 c=diag3
 def solve_tridiagonal_equation(diag1, diag2, diag3, res):
     assert(len(diag1) == len(diag2) == len(diag3) == len(res))
-    alpha = teta = beta = [0]* len(diag2)
-    beta[0] = diag2[0]
-    for i in range(1, len(diag2)):
-        alpha[i] = diag1[i]
-        teta[i] = diag3[i]/beta[i-1]
-        beta[i] = diag2[i] - alpha[i]*teta[i]
-
-    y = [0] * len(res)
-    y[0] = res[0]/beta[0]
-    for i in range(1, len(res)):
-        y[i] = res[i]-alpha[i]*y[i-1]/beta[i]
-
-    x[len(res)] = y[len(res)]
-    for i in range(len(res)-1, 0):
-        x[i] = res[i]-teta[i+1]*x[i+1]
-
+    v = x = z = y = [0]*len(diag2)
+    dim = len(diag2) - 1
+    assert(v[0] == y[-1] == diag1[0] == diag3[dim])
+    for k in range(0,dim):
+        z[k] = 1/(diag2[k] - (diag1[k] * v[k]))
+        v[k+1] = z[k] * diag3[k]
+        y[k] = z[k]*(res[k] - (diag1[k] * y[k-1]))
+    z[dim] = 1/((diag2[dim]) - (diag1[dim] * v[dim]))
+    y[dim] = z[dim]*(res[dim] - (diag1[dim] * y[dim-1]))
+    x[dim] = y[dim]
+    for k in reversed(range(dim - 1)):
+        x[k] = y[k] - (v[k + 1]*x[k + 1])
     solution = x
     return solution
      

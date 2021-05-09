@@ -4,6 +4,8 @@ from cagd.polyline import polyline
 from cagd.spline import spline, knots
 from cagd.vec import vec2
 import cagd.scene_2d as scene_2d
+import numpy as np
+from cagd.utils import solve_tridiagonal_equation
 
 #create an example spline to demonstrate how to create a spline
 #you can use this to test your implementation of the de-boor algorithm 
@@ -16,7 +18,16 @@ example_spline.de_boor(0.4, 1)
 p = example_spline.get_polyline_from_control_points()
 p.set_color("red")
 
+#bonus test for solve tridiagonal equation operation
+A = np.array([[11,2,0,0,0],[3,9,5,0,0],[0,6,25,8,0],[0,0,3,26,7],[0,0,0,4,13]],dtype=float)
+a = [0,3,6,3,4]
+b = [11,9,25,26,13]
+c = [2,5,8,7,0]
+d = [5,7,8,4,3]
 
+print("Test results:")
+print(solve_tridiagonal_equation(a, b, c, d))
+print(np.linalg.solve(A, d))
 
 #interpolate six points with the four different interpolation options to
 #    draw a small letter "e"
@@ -35,14 +46,14 @@ p.set_color("red")
 #p.set_color("red")
 
 #generate a scene and add elements to it
-sc = scene_2d.scene()
-sc.set_resolution(900)
-sc.add_element(example_spline)
-sc.add_element(p)
+#sc = scene_2d.scene()
+#sc.set_resolution(900)
+#sc.add_element(example_spline)
+#sc.add_element(p)
 #sc.add_element(s1)
 #sc.add_element(s2)
 #sc.add_element(s3)
 #sc.add_element(s4)
-sc.write_image()    #compose all elements in the scene
-sc.show()           #tries to show the image with a default viewer
-sc.write_to_file("test.png")    #saves the image to a file
+#sc.write_image()    #compose all elements in the scene
+#sc.show()           #tries to show the image with a default viewer
+#sc.write_to_file("test.png")    #saves the image to a file
