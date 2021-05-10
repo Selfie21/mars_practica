@@ -70,6 +70,8 @@ class spline:
         for tmp in range(0, offset):
             d[tmp] = self.control_points[j+tmp]
 
+        #using one array to save storage, using offset to keep track of last points
+        #tmpj is the index for the ds in the kth iteration (0-len_points)
         for k in range(1, n+1):
             for tmpj in range(len_points):
                 j = i-n+tmpj
@@ -125,30 +127,30 @@ class spline:
     #generates a spline that interpolates the given points using the given mode
     #returns that spline object
     def interpolate_cubic(self, mode, points):
-        interpolation_knots = self.initialize_knots(points)
+        self.knots = self.initialize_knots(points)
         interval = points[-1].x - points[0].x
-        m = len(interpolation_knots) - 1
+        m = len(self.knots) - 1
 
         if mode == 0:
             equidistance = interval / m
             for i in range(1, m):
-                interpolation_knots[i] = interpolation_knots[i - 1] + equidistance
-            print("EQUIDISTANT KNOTS: " + str(interpolation_knots))
+                self.knots[i] = self.knots[i - 1] + equidistance
+            print("EQUIDISTANT KNOTS: " + str(self.knots))
         elif mode == 1:
             for i in range(1, m):
                 a = points[i - 1]
                 b = points[i]
-                interpolation_knots[i] = self.euklidian_norm(a, b) + interpolation_knots[i - 1]
-            print("INTERPOLATION_CHORDAL KNOTS: " + str(interpolation_knots))
+                self.knots[i] = utils.distance(a, b) + self.knots[i - 1]
+            print("INTERPOLATION_CHORDAL KNOTS: " + str(self.knots))
         elif mode == 2:
             for i in range(1, m):
                 a = points[i - 1]
                 b = points[i]
-                interpolation_knots[i] = sqrt(self.euklidian_norm(a, b) + interpolation_knots[i - 1])
-            print("INTERPOLATION_CENTRIPETAL KNOTS: " + str(interpolation_knots))
+                self.knots[i] = sqrt(utils.distance(a, b) + self.knots[i - 1])
+            print("INTERPOLATION_CENTRIPETAL KNOTS: " + str(self.knots))
         elif mode == 3:
             print("")
-        pass
+
 
     #sorts points and intializes them with first and last point
     def initialize_knots(self, points):
@@ -157,14 +159,6 @@ class spline:
         tmp_knots[0] = points[0].x
         tmp_knots[-1] = points[-1].x
         return tmp_knots
-
-    def euklidian_norm(self, a, b):
-        return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
-
-    def angle(self, a, b):
-        vector_product = a.x * b.x + a.y * b.y
-        cosx = vector_product / (self.euklidian_norm(a, a) * self.euklidian_norm(b, b))
-        return acos(cosx)
 
     #generates a spline that interpolates the given points and fulfills the definition
     #of a periodic spline

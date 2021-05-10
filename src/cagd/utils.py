@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from cagd.vec import vec2
+from math import sqrt, acos
 
 #solves the system of linear equations Ax = res
 #where A is a tridiagonal matrix with diag2 representing the main diagonal
@@ -36,4 +37,17 @@ def solve_almost_tridiagonal_equation(diag1, diag2, diag3, res):
     assert(len(diag1) == len(diag2) == len(diag3) == len(res))
     solution = None
     return solution
+
+#Algebraic
+def distance(a, b):
+    diff = vec2(b.x - a.x, b.y - a.y)
+    return euklidian_norm(diff)
+
+def euklidian_norm(a):
+    return sqrt(a.x ** 2 + a.y ** 2)
+
+def angle(a, b):
+    vector_product = a.x * b.x + a.y * b.y
+    cosx = vector_product / (euklidian_norm(a) * euklidian_norm(b))
+    return acos(cosx)
 
