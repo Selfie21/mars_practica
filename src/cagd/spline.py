@@ -1,28 +1,28 @@
 #! /usr/bin/python
 import operator
 
-from cagd.vec import vec2, vec3
 from cagd.polyline import polyline
 from cagd.bezier import bezier_surface, bezier_patches
 import cagd.utils as utils
 import copy
 from math import *
 
+
 class spline:
-    #Interpolation modes
+    # Interpolation modes
     INTERPOLATION_EQUIDISTANT = 0
     INTERPOLATION_CHORDAL = 1
     INTERPOLATION_CENTRIPETAL = 2
     INTERPOLATION_FOLEY = 3
 
     def __init__(self, degree):
-        assert(degree >= 1)
+        assert (degree >= 1)
         self.degree = degree
         self.knots = None
         self.control_points = []
         self.color = "black"
 
-    #checks if the number of knots, controlpoints and degree define a valid spline
+    # checks if the number of knots, controlpoints and degree define a valid spline
     def validate(self):
         knots = self.knots.validate()
         points = len(self.knots) == len(self.control_points) + self.degree + 1
@@ -30,14 +30,14 @@ class spline:
 
     def evaluate(self, t):
         a, b = self.support()
-        assert(a <= t <= b)
+        assert (a <= t <= b)
         if t == self.knots[len(self.knots) - self.degree - 1]:
-            #the spline is only defined on the interval [a, b)
-            #it is useful to define self(b) as lim t->b self(t)
+            # the spline is only defined on the interval [a, b)
+            # it is useful to define self(b) as lim t->b self(t)
             t = t - 0.000001
         return self.de_boor(t, 1)[0]
 
-    #returns the interval [a, b) on which the spline is supported
+    # returns the interval [a, b) on which the spline is supported
     def support(self):
         return (self.knots[self.degree], self.knots[len(self.knots) - self.degree - 1])
 
@@ -53,38 +53,39 @@ class spline:
     def set_color(self, color):
         self.color = color
 
-    #calculates the de_boor scheme at a given value u
-    #stops when the column is only "stop" elements long
-    #returns that column as a list
+    # calculates the de_boor scheme at a given value u
+    # stops when the column is only "stop" elements long
+    # returns that column as a list
     def de_boor(self, u, stop):
         n = self.degree
         t = self.knots
         i = self.knots.knot_index(u)
         j = i - n
 
-        offset = n+1
+        offset = n + 1
         len_points = n
-        d_length = int(((n+1) * (n+2))/2)
-        assert i >= n and i+n < len(self.knots)
+        d_length = int(((n + 1) * (n + 2)) / 2)
+        assert i >= n and i + n < len(self.knots)
         d = [0] * d_length
         for tmp in range(0, offset):
-            d[tmp] = self.control_points[j+tmp]
+            d[tmp] = self.control_points[j + tmp]
 
-        #using one array to save storage, using offset to keep track of last points
-        #tmpj is the index for the ds in the kth iteration (0-len_points)
-        for k in range(1, n+1):
+        # using one array to save storage, using offset to keep track of current position in array
+        # tmpj is the index for the d in the kth iteration (0-len_points)
+        for k in range(1, n + 1):
             for tmpj in range(len_points):
-                j = i-n+tmpj
-                alpha = (u - t[j+k]) / (t[j+n+1] - t[j+k])
-                d[tmpj + offset] = (1-alpha) * d[tmpj+offset-len_points-1] + (alpha * d[tmpj+offset-len_points])
+                j = i - n + tmpj
+                alpha = (u - t[j + k]) / (t[j + n + 1] - t[j + k])
+                d[tmpj + offset] = (1 - alpha) * d[tmpj + offset - len_points - 1] + (
+                        alpha * d[tmpj + offset - len_points])
             offset += len_points
             len_points -= 1
 
             if len_points < stop:
                 return d[offset - (len_points + 1):offset]
 
-    #adjusts the control points such that it represents the same function,
-    #but with an added knot
+    # adjusts the control points such that it represents the same function,
+    # but with an added knot
     def insert_knot(self, t):
         pass
 
@@ -92,7 +93,7 @@ class spline:
         min_vec = copy.copy(self.control_points[0])
         max_vec = copy.copy(self.control_points[0])
         for p in self.control_points:
-            #print("comparing {0} to {1} and {2}".format(p, min_vec, max_vec))
+            # print("comparing {0} to {1} and {2}".format(p, min_vec, max_vec))
             if p.x < min_vec.x:
                 min_vec.x = p.x
             if p.y < min_vec.y:
@@ -108,7 +109,7 @@ class spline:
         while i < len(self.knots) - self.degree - 2:
             i += 1
             k0 = self.knots[i]
-            k1 = self.knots[i+1]
+            k1 = self.knots[i + 1]
             if k0 == k1:
                 continue
             p0 = self(k0)
@@ -123,11 +124,25 @@ class spline:
         for p in self.control_points:
             pl.append_point(p)
         return pl
-            
-    #generates a spline that interpolates the given points using the given mode
-    #returns that spline object
+
+    # generates a spline that interpolates the given points using the given mode
+    # returns that spline object
     def interpolate_cubic(self, mode, points):
-        self.knots = self.initialize_knots(points)
+        self.initialize_knots(points)
+        self.generate_knots(mode, points)
+        # diag1, diag2, diag3, res = generate_sole()
+        # self.control_points = utils.solve_tridiagonal_equation(diag1, diag2, diag3, res)
+        # return self
+        return self.knots
+
+    #generates the system of linear equations for creating a spline
+    def generate_sole(self, points):
+        dim = len(points) + 2
+        diag1 = diag2 = diag3 = res = [0] * dim
+        # TODO: implement sole for creating the spline
+        # return diag1, diag2, diag3, res
+
+    def generate_knots(self, mode, points):
         interval = points[-1].x - points[0].x
         m = len(self.knots) - 1
 
@@ -135,67 +150,77 @@ class spline:
             equidistance = interval / m
             for i in range(1, m):
                 self.knots[i] = self.knots[i - 1] + equidistance
-            print("EQUIDISTANT KNOTS: " + str(self.knots))
         elif mode == 1:
             for i in range(1, m):
-                a = points[i - 1]
-                b = points[i]
-                self.knots[i] = utils.distance(a, b) + self.knots[i - 1]
-            print("INTERPOLATION_CHORDAL KNOTS: " + str(self.knots))
+                prev_point = points[i - 1]
+                current_point = points[i]
+                self.knots[i] = utils.distance(prev_point, current_point) + self.knots[i - 1]
         elif mode == 2:
             for i in range(1, m):
-                a = points[i - 1]
-                b = points[i]
-                self.knots[i] = sqrt(utils.distance(a, b) + self.knots[i - 1])
-            print("INTERPOLATION_CENTRIPETAL KNOTS: " + str(self.knots))
+                prev_point = points[i - 1]
+                current_point = points[i]
+                self.knots[i] = sqrt(utils.distance(prev_point, current_point) + self.knots[i - 1])
         elif mode == 3:
-            print("")
+            for i in range(1, m):
+                prev_point = points[i - 1]
+                current_point = points[i]
+                next_point = points[i + 1]
 
+                theta = min(pi - utils.angle(prev_point, current_point), pi / 2)
+                theta_next = min(pi - utils.angle(current_point, next_point), pi / 2)
+                # TODO need to find out what nielson metric is and implement foley
+        self.triple_edge_knots()
 
-    #sorts points and intializes them with first and last point
+    # sorts points and intializes them with first and last point
     def initialize_knots(self, points):
         points.sort(key=operator.attrgetter('x'))
-        tmp_knots = [0] * len(points)
-        tmp_knots[0] = points[0].x
-        tmp_knots[-1] = points[-1].x
-        return tmp_knots
+        self.knots = knots(len(points))
+        self.knots[0] = points[0].x
+        self.knots[-1] = points[-1].x
 
-    #generates a spline that interpolates the given points and fulfills the definition
-    #of a periodic spline
-    #returns that spline object
+    # triples edge knots
+    def triple_edge_knots(self):
+        self.knots.insert(self.knots[0])
+        self.knots.insert(self.knots[0])
+        self.knots.insert(self.knots[-1])
+        self.knots.insert(self.knots[-1])
+
+    # generates a spline that interpolates the given points and fulfills the definition
+    # of a periodic spline
+    # returns that spline object
     def interpolate_cubic_periodic(points):
         pass
 
-    #for splines of degree 3, generate a parallel spline with distance dist
-    #the returned spline is off from the exact parallel by at most eps
+    # for splines of degree 3, generate a parallel spline with distance dist
+    # the returned spline is off from the exact parallel by at most eps
     def generate_parallel(self, dist, eps):
-        assert(self.degree == 3)
+        assert (self.degree == 3)
         para_spline = None
         return para_spline
 
-    #generates a rotational surface by rotating the spline around the z axis
-    #the spline is assumed to be on the xz-plane
-    #num_samples refers to the number of interpolation points in the rotational direction
-    #returns a spline surface object in three dimensions
+    # generates a rotational surface by rotating the spline around the z axis
+    # the spline is assumed to be on the xz-plane
+    # num_samples refers to the number of interpolation points in the rotational direction
+    # returns a spline surface object in three dimensions
     def generate_rotation_surface(self, num_samples):
         pass
 
 
 class spline_surface:
-    #the two directions of the parameter space
+    # the two directions of the parameter space
     DIR_U = 0
     DIR_V = 1
 
-    #creates a spline of degrees n,m
-    #degree is a tuple (n,m)
+    # creates a spline of degrees n,m
+    # degree is a tuple (n,m)
     def __init__(self, degree):
         du, dv = degree
-        assert(du >= 1 and dv >= 1)
+        assert (du >= 1 and dv >= 1)
         self.degree = degree
-        self.knots = (None, None)  #tuple of both knot vectors
-        self.control_points = [[]] #2dim array of control points
+        self.knots = (None, None)  # tuple of both knot vectors
+        self.control_points = [[]]  # 2dim array of control points
 
-    #checks if the number of knots, controlpoints and degree define a valid spline
+    # checks if the number of knots, controlpoints and degree define a valid spline
     def validate(self):
         if len(self.control_points) == 0:
             return False
@@ -212,16 +237,16 @@ class spline_surface:
         s1, s2 = self.support()
         a, b = s1
         c, d = s2
-        assert(a <= u <= b and c <= v <= v)
+        assert (a <= u <= b and c <= v <= v)
         if u == b:
             u = u - 0.000001
         if v == d:
             v = v - 0.000001
         t = (u, v)
-        return self.de_boor(t, (1,1))[0][0]
+        return self.de_boor(t, (1, 1))[0][0]
 
-    #return nested tuple ((a,b), (c,d))
-    #the spline is supported in (u,v) \in [a,b)x[c,d]
+    # return nested tuple ((a,b), (c,d))
+    # the spline is supported in (u,v) \in [a,b)x[c,d]
     def support(self):
         k1, k2 = self.knots
         d1, d2 = self.degree
@@ -232,8 +257,8 @@ class spline_surface:
     def __call__(self, u, v):
         return self.evaluate(u, v)
 
-    #calculates the de boor scheme at t = (u,v)
-    #until there are only stop = (s1, s2) elements left
+    # calculates the de boor scheme at t = (u,v)
+    # until there are only stop = (s1, s2) elements left
     def de_boor(self, t, stop):
         d1, d2 = self.degree
         k1, k2 = self.knots
@@ -241,7 +266,7 @@ class spline_surface:
         u, v = t
         m1 = len(self.control_points)
         m2 = len(self.control_points[0])
-        
+
         new_rows = [None for i in range(m1)]
         for row in range(m1):
             spl = spline(d2)
@@ -265,7 +290,7 @@ class spline_surface:
         elif direction == self.DIR_V:
             self.__insert_knot_v(t)
         else:
-            assert(False)
+            assert (False)
 
     def __insert_knot_v(self, t):
         du, dv = self.degree
@@ -286,14 +311,14 @@ class spline_surface:
         ku, kv = self.knots
         nu = len(self.control_points)
         nv = len(self.control_points[0])
-        new_control_points = [[None for i in range(nv)] for j in range(nu+1)]
+        new_control_points = [[None for i in range(nv)] for j in range(nu + 1)]
         for i in range(nv):
             col = [self.control_points[j][i] for j in range(nu)]
             spl = spline(dv)
             spl.control_points = col
             spl.knots = copy.deepcopy(ku)
             spl.insert_knot(t)
-            for j in range(nu+1):
+            for j in range(nu + 1):
                 new_control_points[j][i] = spl.control_points[j]
         self.control_points = new_control_points
         ku.insert(t)
@@ -303,9 +328,8 @@ class spline_surface:
         return patches
 
 
-
 class knots:
-    #creates a knots array with n elements
+    # creates a knots array with n elements
     def __init__(self, n):
         self.knots = [None for i in range(n)]
 
@@ -319,7 +343,7 @@ class knots:
             else:
                 if k < prev:
                     return False
-        return True 
+        return True
 
     def __len__(self):
         return len(self.knots)
@@ -346,7 +370,6 @@ class knots:
         if v < self.knots[0] or v >= self.knots[-1]:
             return -1
 
-        for index in range(self.__len__()-1):
-            if v < self.knots[index+1]:
+        for index in range(self.__len__() - 1):
+            if v < self.knots[index + 1]:
                 return index
-
