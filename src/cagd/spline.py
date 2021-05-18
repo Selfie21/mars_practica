@@ -130,17 +130,56 @@ class spline:
     def interpolate_cubic(self, mode, points):
         self.initialize_knots(points)
         self.generate_knots(mode, points)
-        # diag1, diag2, diag3, res = generate_sole()
-        # self.control_points = utils.solve_tridiagonal_equation(diag1, diag2, diag3, res)
-        # return self
+        diag1, diag2, diag3, res = self.generate_sole(points)
+        self.control_points = utils.solve_tridiagonal_equation(diag1, diag2, diag3, res)
+        return self
         return self.knots
+
+    # Calculates and returns αi
+    def alpha(self, i):
+        return (self.knots[i + 2] - self.knots[i]) / (self.knots[i + 3] - self.knots[i])
+
+    # Calculates and returns βi
+    def beta(self, i):
+        print("calculating beta " + str(i))
+        print("beta = (self.knots[i + 2] - self.knots[i + 1]) / (self.knots[i + 4] - self.knots[i + 1])")
+        print("beta = " + "(self.knots[" + str(i + 2) + "] - self.knots[" + str(i + 1) + "]) / (self.knots[" + str(i + 3) + "] - self.knots[" + str(i + 1) + "]))")
+        print("beta " + str(i) + " = (" + str(self.knots[i + 2]) + " - " + str(self.knots[i + 1]) + " / " + str(self.knots[i + 3]) + " - " + str(self.knots[i + 1]) + ")")
+        return (self.knots[i + 2] - self.knots[i + 1]) / (self.knots[i + 3] - self.knots[i + 1])
+
+    # Calculates γi
+    def gamma(self, i):
+        return (self.knots[i + 2] - self.knots[i + 1]) / (self.knots[i + 4] - self.knots[i + 1])
 
     #generates the system of linear equations for creating a spline
     def generate_sole(self, points):
         dim = len(points) + 2
         diag1 = diag2 = diag3 = res = [0] * dim
-        # TODO: implement sole for creating the spline
-        # return diag1, diag2, diag3, res
+
+        # Calc diag1
+        diag1[0] = 0
+        diag1[1] = -self.alpha(2)
+        for i in range(2, dim - 2):
+            diag1[i] = self.beta(i + 1) * self.gamma(i + 1)
+        diag1[dim - 1] = -1
+
+
+        # Calc diag2
+        diag2[0] = 1
+        diag2[1] = 1 + self.alpha(2)
+        for i in range(2, dim - 3):
+            diag2[i] = (1 - self.beta(i + 1)) * self.alpha(i + 1) + self.beta(i + 1) * (1 - self.gamma(i + 1))
+        diag2[dim - 2] = - self.beta(dim - 1) + 2
+        diag2[dim - 1] = 1
+
+        # Calc diag3
+        diag3[0] = -1
+        for i in range(1, dim - 3):
+            diag3[i] = (1 - self.beta(i + 1)) * (1 - self.alpha(i))
+
+        diag3[dim - 2] = -1 + self.gamma(dim - 1)
+        diag3[dim - 1] = 0
+        return diag1, diag2, diag3, res
 
     def generate_knots(self, mode, points):
         interval = points[-1].x - points[0].x
