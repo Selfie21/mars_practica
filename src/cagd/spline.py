@@ -154,8 +154,10 @@ class spline:
     #generates the system of linear equations for creating a spline
     def generate_sole(self, points):
         dim = len(points) + 2
-        diag1 = diag2 = diag3 = res = [0] * dim
-
+        diag1 = [0] * dim
+        diag2 = [0] * dim
+        diag3 = [0] * dim
+        res = [0] * dim
         # Calc diag1
         diag1[0] = 0
         diag1[1] = -self.alpha(2)

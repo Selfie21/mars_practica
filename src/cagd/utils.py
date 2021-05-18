@@ -13,7 +13,11 @@ from cagd.vec import vec2
 # a = diag1 b = diag2 c=diag3
 def solve_tridiagonal_equation(diag1, diag2, diag3, res):
     assert (len(diag1) == len(diag2) == len(diag3) == len(res))
-    v = x = z = y = [0] * len(diag2)
+    v = [0] * len(diag2)
+    x = [0] * len(diag2)
+    y = [0] * len(diag2)
+    z = [0] * len(diag2)
+
     dim = len(diag2) - 1
     assert (v[0] == y[-1] == diag1[0] == diag3[dim])
     for k in range(0, dim):
