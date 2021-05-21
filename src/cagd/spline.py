@@ -141,10 +141,6 @@ class spline:
 
     # Calculates and returns βi
     def beta(self, i):
-        print("calculating beta " + str(i))
-        print("beta = (self.knots[i + 2] - self.knots[i + 1]) / (self.knots[i + 4] - self.knots[i + 1])")
-        print("beta = " + "(self.knots[" + str(i + 2) + "] - self.knots[" + str(i + 1) + "]) / (self.knots[" + str(i + 3) + "] - self.knots[" + str(i + 1) + "]))")
-        print("beta " + str(i) + " = (" + str(self.knots[i + 2]) + " - " + str(self.knots[i + 1]) + " / " + str(self.knots[i + 3]) + " - " + str(self.knots[i + 1]) + ")")
         return (self.knots[i + 2] - self.knots[i + 1]) / (self.knots[i + 3] - self.knots[i + 1])
 
     # Calculates γi
@@ -159,10 +155,10 @@ class spline:
         diag3 = [0] * dim
         res = [0] * dim
         # Calc diag1
-        diag1[0] = 0
-        diag1[1] = -self.alpha(2)
-        for i in range(2, dim - 2):
-            diag1[i] = self.beta(i + 1) * self.gamma(i + 1)
+        diag1[1] = 0
+        diag1[2] = -self.alpha(2)
+        for i in range(3, dim - 2):
+            diag1[i] = self.beta(i) * self.gamma(i)
         diag1[dim - 1] = -1
 
 
@@ -171,15 +167,15 @@ class spline:
         diag2[1] = 1 + self.alpha(2)
         for i in range(2, dim - 3):
             diag2[i] = (1 - self.beta(i + 1)) * self.alpha(i + 1) + self.beta(i + 1) * (1 - self.gamma(i + 1))
-        diag2[dim - 2] = - self.beta(dim - 1) + 2
+        diag2[dim - 2] = - self.gamma(dim - 3) + 2
         diag2[dim - 1] = 1
 
         # Calc diag3
         diag3[0] = -1
-        for i in range(1, dim - 3):
+        for i in range(1, dim - 4):
             diag3[i] = (1 - self.beta(i + 1)) * (1 - self.alpha(i))
 
-        diag3[dim - 2] = -1 + self.gamma(dim - 1)
+        diag3[dim - 2] = -1 + self.gamma(dim - 3)
         diag3[dim - 1] = 0
         return diag1, diag2, diag3, res
 
