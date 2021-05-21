@@ -10,6 +10,8 @@ from cagd.vec import vec2
 # create an example spline to demonstrate how to create a spline
 # you can use this to test your implementation of the de-boor algorithm
 #    and the knot_index function
+from src.cagd.polyline import polyline
+
 example_spline = spline(3)
 example_spline.control_points = [vec2(0, 0), vec2(1, 1), vec2(2, 2), vec2(3, 3), vec2(4, 4), vec2(5, 5), vec2(6, 6)]
 example_spline.knots = knots(11)
@@ -20,7 +22,6 @@ p.set_color("red")
 
 interpolation_points = [vec2(5, 0), vec2(4, 1), vec2(1, 2), vec2(12, 3), vec2(-1, 4), vec2(-6, 5), vec2(-9, 6)]
 mode = 0
-knots = example_spline.interpolate_cubic(mode, interpolation_points)
 
 # bonus test for solve tridiagonal equation operation
 A = np.array([[11, 2, 0, 0, 0], [3, 9, 5, 0, 0], [0, 6, 25, 8, 0], [0, 0, 3, 26, 7], [0, 0, 0, 4, 13]], dtype=float)
@@ -35,25 +36,25 @@ print(np.linalg.solve(A, d))
 # interpolate six points with the four different interpolation options to
 #    draw a small letter "e"
 # uncomment these lines once you implemented the spline interpolation
-# pts = [vec2(0,.4), vec2(.8,.8), vec2(.5,1.2), vec2(-.03,.4), vec2(.4,0), vec2(1,.2)]
-# s1 = spline.interpolate_cubic(spline.INTERPOLATION_EQUIDISTANT, pts)
+pts = [vec2(0,.4), vec2(.8,.8), vec2(.5,1.2), vec2(-.03,.4), vec2(.4,0), vec2(1,.2)]
+spline = spline(3)
+s1 = spline.interpolate_cubic(spline.INTERPOLATION_EQUIDISTANT, pts)
 # s2 = spline.interpolate_cubic(spline.INTERPOLATION_CHORDAL, pts)
 # s3 = spline.interpolate_cubic(spline.INTERPOLATION_CENTRIPETAL, pts)
 # s4 = spline.interpolate_cubic(spline.INTERPOLATION_FOLEY, pts)
-# s1.set_color("#000066")
+s1.set_color("#000066")
 # s2.set_color("#0000aa")
 # s3.set_color("#6666ff")
 # s4.set_color("#aaaaff")
-# p = polyline()
-# p.points = pts
-# p.set_color("red")
+p = polyline()
+p.points = pts
+p.set_color("red")
 
 # generate a scene and add elements to it
 sc = scene_2d.scene()
 sc.set_resolution(900)
-sc.add_element(example_spline)
 sc.add_element(p)
-# sc.add_element(s1)
+sc.add_element(s1)
 # sc.add_element(s2)
 # sc.add_element(s3)
 # sc.add_element(s4)

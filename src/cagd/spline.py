@@ -4,6 +4,7 @@ import operator
 from cagd.polyline import polyline
 from cagd.bezier import bezier_surface, bezier_patches
 import cagd.utils as utils
+from cagd.vec import vec2
 import copy
 from math import *
 
@@ -130,10 +131,12 @@ class spline:
     def interpolate_cubic(self, mode, points):
         self.initialize_knots(points)
         self.generate_knots(mode, points)
-        diag1, diag2, diag3, res = self.generate_sole(points)
-        self.control_points = utils.solve_tridiagonal_equation(diag1, diag2, diag3, res)
+        diag1, diag2, diag3, resx, resy = self.generate_sole(points)
+        control_points_x = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resx)
+        control_points_y = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resy)
+        for pt_x, pt_y in zip(control_points_x, control_points_y):
+            self.control_points.append(vec2(pt_x, pt_y))
         return self
-        return self.knots
 
     # Calculates and returns αi
     def alpha(self, i):
@@ -153,31 +156,39 @@ class spline:
         diag1 = [0] * dim
         diag2 = [0] * dim
         diag3 = [0] * dim
-        res = [0] * dim
-        # Calc diag1
-        diag1[1] = 0
-        diag1[2] = -self.alpha(2)
-        for i in range(3, dim - 2):
-            diag1[i] = self.beta(i) * self.gamma(i)
-        diag1[dim - 1] = -1
+        resx = [0] * (dim-2)
+        resy = [0] * (dim - 2)
 
+        diag1[1] = -1
+        for i in range(2, dim - 2):
+            diag1[i] = (1 - self.beta(i-1)) * (1 - self.alpha(i-1))
+        diag1[-2] = -1 + self.gamma(dim - 4)
+        diag1[-1] = 0
 
-        # Calc diag2
         diag2[0] = 1
-        diag2[1] = 1 + self.alpha(2)
-        for i in range(2, dim - 3):
-            diag2[i] = (1 - self.beta(i + 1)) * self.alpha(i + 1) + self.beta(i + 1) * (1 - self.gamma(i + 1))
-        diag2[dim - 2] = - self.gamma(dim - 3) + 2
-        diag2[dim - 1] = 1
+        diag2[1] = 1 + self.alpha(1)
+        for i in range(2, dim - 2):
+            diag2[i] = (1 - self.beta(i-1)) * self.alpha(i-1) + self.beta(i-1) * (1 - self.gamma(i-1))
+        diag2[-2] = -self.gamma(dim - 4) + 2
+        diag2[-1] = 1
 
-        # Calc diag3
-        diag3[0] = -1
-        for i in range(1, dim - 4):
-            diag3[i] = (1 - self.beta(i + 1)) * (1 - self.alpha(i))
+        diag3[0] = 0
+        diag3[1] = -self.alpha(1)
+        for i in range(2, dim - 2):
+            diag3[i] = self.beta(i-1) * self.gamma(i-1)
+        diag3[-2] = -1
 
-        diag3[dim - 2] = -1 + self.gamma(dim - 3)
-        diag3[dim - 1] = 0
-        return diag1, diag2, diag3, res
+        for i in range(dim-2):
+            resx[i] = points[i].x
+        resx.insert(1, 0)
+        resx.insert(-1, 0)
+
+        for i in range(dim-2):
+            resy[i] = points[i].y
+        resy.insert(1, 0)
+        resy.insert(-1, 0)
+
+        return diag1, diag2, diag3, resx, resy
 
     def generate_knots(self, mode, points):
         interval = points[-1].x - points[0].x
@@ -188,6 +199,7 @@ class spline:
             for i in range(1, m):
                 self.knots[i] = self.knots[i - 1] + equidistance
         elif mode == 1:
+            # TODO: Fix these knots
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
