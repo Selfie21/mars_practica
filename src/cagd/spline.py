@@ -194,22 +194,22 @@ class spline:
         interval = points[-1].x - points[0].x
         m = len(self.knots) - 1
 
-        if mode == 0:
+        if mode == INTERPOLATION_EQUIDISTANT:
             equidistance = interval / m
             for i in range(1, m):
                 self.knots[i] = self.knots[i - 1] + equidistance
-        elif mode == 1:
+        elif mode == INTERPOLATION_CHORDAL:
             # TODO: Fix these knots
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
                 self.knots[i] = utils.distance(prev_point, current_point) + self.knots[i - 1]
-        elif mode == 2:
+        elif mode == INTERPOLATION_CENTRIPETAL:
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
                 self.knots[i] = sqrt(utils.distance(prev_point, current_point) + self.knots[i - 1])
-        elif mode == 3:
+        elif mode == INTERPOLATION_FOLEY:
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
