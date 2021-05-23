@@ -1,6 +1,4 @@
 #! /usr/bin/python
-import operator
-
 from cagd.polyline import polyline
 from cagd.bezier import bezier_surface, bezier_patches
 import cagd.utils as utils
@@ -131,6 +129,7 @@ class spline:
     def interpolate_cubic(self, mode, points):
         self.initialize_knots(points)
         self.generate_knots(mode, points)
+        # TODO setup points so that they get solved with vec2
         diag1, diag2, diag3, resx, resy = self.generate_sole(points)
         control_points_x = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resx)
         control_points_y = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resy)
@@ -161,21 +160,21 @@ class spline:
 
         diag1[1] = -1
         for i in range(2, dim - 2):
-            diag1[i] = (1 - self.beta(i-1)) * (1 - self.alpha(i-1))
-        diag1[-2] = -1 + self.gamma(dim - 4)
+            diag1[i] = (1 - self.beta(i)) * (1 - self.alpha(i))
+        diag1[-2] = -1 + self.gamma(dim - 3)
         diag1[-1] = 0
 
         diag2[0] = 1
-        diag2[1] = 1 + self.alpha(1)
+        diag2[1] = 1 + self.alpha(2)
         for i in range(2, dim - 2):
-            diag2[i] = (1 - self.beta(i-1)) * self.alpha(i-1) + self.beta(i-1) * (1 - self.gamma(i-1))
-        diag2[-2] = -self.gamma(dim - 4) + 2
+            diag2[i] = (1 - self.beta(i)) * self.alpha(i) + self.beta(i) * (1 - self.gamma(i))
+        diag2[-2] = -self.gamma(dim - 3) + 2
         diag2[-1] = 1
 
         diag3[0] = 0
-        diag3[1] = -self.alpha(1)
+        diag3[1] = -self.alpha(2)
         for i in range(2, dim - 2):
-            diag3[i] = self.beta(i-1) * self.gamma(i-1)
+            diag3[i] = self.beta(i) * self.gamma(i)
         diag3[-2] = -1
 
         for i in range(dim-2):
@@ -191,25 +190,23 @@ class spline:
         return diag1, diag2, diag3, resx, resy
 
     def generate_knots(self, mode, points):
-        interval = points[-1].x - points[0].x
-        m = len(self.knots) - 1
+        m = len(self.knots)
 
-        if mode == INTERPOLATION_EQUIDISTANT:
-            equidistance = interval / m
+        if mode == spline.INTERPOLATION_EQUIDISTANT:
             for i in range(1, m):
-                self.knots[i] = self.knots[i - 1] + equidistance
-        elif mode == INTERPOLATION_CHORDAL:
-            # TODO: Fix these knots
+                self.knots[i] = i
+        elif mode == spline.INTERPOLATION_CHORDAL:
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
                 self.knots[i] = utils.distance(prev_point, current_point) + self.knots[i - 1]
-        elif mode == INTERPOLATION_CENTRIPETAL:
+        elif mode == spline.INTERPOLATION_CENTRIPETAL:
+            # TODO Produces wrong points
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
                 self.knots[i] = sqrt(utils.distance(prev_point, current_point) + self.knots[i - 1])
-        elif mode == INTERPOLATION_FOLEY:
+        elif mode == spline.INTERPOLATION_FOLEY:
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
@@ -225,19 +222,19 @@ class spline:
                                                       + ((3 * theta * prev_d) / ((2 * prev_d) + current_d))
                                                       + ((3 * theta_next * next_d) / ((2 * next_d) + current_d)))
                 # TODO need to find out what nielson metric is and implement foley
-        self.triple_edge_knots()
+        self.quadruple_edge_knots()
 
     # sorts points and intializes them with first and last point
     def initialize_knots(self, points):
-        points.sort(key=operator.attrgetter('x'))
         self.knots = knots(len(points))
-        self.knots[0] = points[0].x
-        self.knots[-1] = points[-1].x
+        self.knots[0] = 0
 
-    # triples edge knots
-    def triple_edge_knots(self):
+    # quadruple edge knots
+    def quadruple_edge_knots(self):
         self.knots.insert(self.knots[0])
         self.knots.insert(self.knots[0])
+        self.knots.insert(self.knots[0])
+        self.knots.insert(self.knots[-1])
         self.knots.insert(self.knots[-1])
         self.knots.insert(self.knots[-1])
 
