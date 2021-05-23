@@ -126,16 +126,17 @@ class spline:
 
     # generates a spline that interpolates the given points using the given mode
     # returns that spline object
-    def interpolate_cubic(self, mode, points):
-        self.initialize_knots(points)
-        self.generate_knots(mode, points)
+    def interpolate_cubic(mode, points):
+        newSpline = spline(3)
+        newSpline.initialize_knots(points)
+        newSpline.generate_knots(mode, points)
         # TODO setup points so that they get solved with vec2
-        diag1, diag2, diag3, resx, resy = self.generate_sole(points)
+        diag1, diag2, diag3, resx, resy = newSpline.generate_sole(points)
         control_points_x = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resx)
         control_points_y = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resy)
         for pt_x, pt_y in zip(control_points_x, control_points_y):
-            self.control_points.append(vec2(pt_x, pt_y))
-        return self
+            newSpline.control_points.append(vec2(pt_x, pt_y))
+        return newSpline
 
     # Calculates and returns αi
     def alpha(self, i):
@@ -201,11 +202,10 @@ class spline:
                 current_point = points[i]
                 self.knots[i] = utils.distance(prev_point, current_point) + self.knots[i - 1]
         elif mode == spline.INTERPOLATION_CENTRIPETAL:
-            # TODO Produces wrong points
             for i in range(1, m):
                 prev_point = points[i - 1]
                 current_point = points[i]
-                self.knots[i] = sqrt(utils.distance(prev_point, current_point) + self.knots[i - 1])
+                self.knots[i] = sqrt(utils.distance(prev_point, current_point)) + self.knots[i - 1]
         elif mode == spline.INTERPOLATION_FOLEY:
             for i in range(1, m):
                 prev_point = points[i - 1]

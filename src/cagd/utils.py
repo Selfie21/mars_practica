@@ -32,6 +32,38 @@ def solve_tridiagonal_equation(diag1, diag2, diag3, res):
     solution = x
     return solution
 
+# solves the system of linear equations Ax = res with twodimensional vectors
+# where A is a tridiagonal matrix with diag2 representing the main diagonal
+# diag1 and diag3 represent the lower and upper diagonal respectively
+# all four parameters are vectors of size n
+# the first element of diag1 and the last element of diag3 are ignored
+# therefore diag1[i], diag2[i] and diag3[i] are located on the same row of A
+# a = diag1 b = diag2 c=diag3
+"""
+def solve_tridiagonal_eqation_vectors(diag1, diag2, diag3, res):
+    assert (len(diag1) == len(diag2) == len(diag3) == len(res))
+    
+    if isinstance(diag1[0], vec2):
+        v = [vec2(0,0)] * len(diag2)
+        x = [vec2(0,0)] * len(diag2)
+        y = [vec2(0,0)] * len(diag2)
+        z = [vec2(0,0)] * len(diag2)
+
+    
+    dim = len(diag2) - 1
+    assert (v[0] == y[-1] == diag1[0] == diag3[dim])
+    for k in range(0, dim):
+        z[k] = 1 / (diag2[k] - (diag1[k] * v[k]))
+        v[k + 1] = z[k] * diag3[k]
+        y[k] = z[k] * (res[k] - (diag1[k] * y[k - 1]))
+    z[dim] = 1 / ((diag2[dim]) - (diag1[dim] * v[dim]))
+    y[dim] = z[dim] * (res[dim] - (diag1[dim] * y[dim - 1]))
+    x[dim] = y[dim]
+    for k in reversed(range(dim - 1)):
+        x[k] = y[k] - (v[k + 1] * x[k + 1])
+    return x
+
+"""
 
 # solves the system of linear equations Ax = res
 # where A is an almost tridiagonal matrix with diag2 representing the main diagonal
