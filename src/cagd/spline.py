@@ -207,21 +207,20 @@ class spline:
                 current_point = points[i]
                 self.knots[i] = sqrt(utils.distance(prev_point, current_point)) + self.knots[i - 1]
         elif mode == spline.INTERPOLATION_FOLEY:
-            for i in range(1, m):
+            for i in range(0, m - 1):
                 prev_point = points[i - 1]
                 current_point = points[i]
-                next_point = points[i + 1]
+                next_point = points[i+1]
 
                 theta = min(pi - utils.angle(prev_point, current_point), pi / 2)
                 theta_next = min(pi - utils.angle(current_point, next_point), pi / 2)
 
-                prev_d = 0 if i == 1 else utils.distance(points[i - 2], prev_point)
+                prev_d = 0 if i == 1 else utils.distance(points[i - 1], prev_point)
                 current_d = utils.distance(prev_point, current_point)
-                next_d = 0 if i == m - 1 else utils.distance(current_point, next_point)
-                self.knots[i] = current_d * (1
+                next_d = 0 if i == m-1 else utils.distance(current_point, next_point)
+                self.knots[i + 1] = (current_d * (1
                                                       + ((3 * theta * prev_d) / ((2 * prev_d) + current_d))
-                                                      + ((3 * theta_next * next_d) / ((2 * next_d) + current_d)))
-                # TODO need to find out what nielson metric is and implement foley
+                                                      + ((3 * theta_next * next_d) / ((2 * next_d) + current_d)))) + self.knots[i]
         self.quadruple_edge_knots()
 
     # sorts points and intializes them with first and last point
