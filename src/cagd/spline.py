@@ -38,7 +38,7 @@ class spline:
 
     # returns the interval [a, b) on which the spline is supported
     def support(self):
-        return (self.knots[self.degree], self.knots[len(self.knots) - self.degree - 1])
+        return self.knots[self.degree], self.knots[len(self.knots) - self.degree - 1]
 
     def __call__(self, t):
         return self.evaluate(t)
@@ -101,7 +101,7 @@ class spline:
                 max_vec.x = p.x
             if p.y > max_vec.y:
                 max_vec.y = p.y
-        return (min_vec, max_vec)
+        return min_vec, max_vec
 
     def draw(self, scene, num_samples):
         i = self.degree - 1
@@ -127,16 +127,15 @@ class spline:
     # generates a spline that interpolates the given points using the given mode
     # returns that spline object
     def interpolate_cubic(mode, points):
-        newSpline = spline(3)
-        newSpline.initialize_knots(points)
-        newSpline.generate_knots(mode, points)
-        # TODO setup points so that they get solved with vec2
-        diag1, diag2, diag3, resx, resy = newSpline.generate_sole(points)
+        new_spline = spline(3)
+        new_spline.initialize_knots(points)
+        new_spline.generate_knots(mode, points)
+        diag1, diag2, diag3, resx, resy = new_spline.generate_sole(points)
         control_points_x = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resx)
         control_points_y = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resy)
         for pt_x, pt_y in zip(control_points_x, control_points_y):
-            newSpline.control_points.append(vec2(pt_x, pt_y))
-        return newSpline
+            new_spline.control_points.append(vec2(pt_x, pt_y))
+        return new_spline
 
     # Calculates and returns αi
     def alpha(self, i):
@@ -150,7 +149,7 @@ class spline:
     def gamma(self, i):
         return (self.knots[i + 2] - self.knots[i + 1]) / (self.knots[i + 4] - self.knots[i + 1])
 
-    #generates the system of linear equations for creating a spline
+    # generates the system of linear equations for creating a spline
     def generate_sole(self, points):
         dim = len(points) + 2
         diag1 = [0] * dim
@@ -230,12 +229,9 @@ class spline:
 
     # quadruple edge knots
     def quadruple_edge_knots(self):
-        self.knots.insert(self.knots[0])
-        self.knots.insert(self.knots[0])
-        self.knots.insert(self.knots[0])
-        self.knots.insert(self.knots[-1])
-        self.knots.insert(self.knots[-1])
-        self.knots.insert(self.knots[-1])
+        for i in range(3):
+            self.knots.insert(self.knots[0])
+            self.knots.insert(self.knots[-1])
 
     # generates a spline that interpolates the given points and fulfills the definition
     # of a periodic spline
