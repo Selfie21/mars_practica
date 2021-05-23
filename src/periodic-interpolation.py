@@ -4,10 +4,15 @@ import cagd.scene_2d as scene
 from cagd.vec import vec2
 from cagd.spline import spline, knots
 from cagd.polyline import polyline
+from math import pi, sin, cos
 
 #returns a list of num_samples points that are uniformly distributed on the unit circle
 def unit_circle_points(num_samples):
-    return []
+    circle_points = []
+    angle = (2 * pi) / num_samples
+    for i in range(num_samples):
+        circle_points.append(vec2(round(cos(i * angle), 14), round(sin(i * angle), 14)))
+    return circle_points
 
 #calculates the deviation between the given spline and a unit circle
 def calculate_circle_deviation(spline):
