@@ -155,7 +155,7 @@ class spline:
         diag1 = [0] * dim
         diag2 = [0] * dim
         diag3 = [0] * dim
-        resx = [0] * (dim-2)
+        resx = [0] * (dim - 2)
         resy = [0] * (dim - 2)
 
         diag1[1] = -1
@@ -236,8 +236,26 @@ class spline:
     # generates a spline that interpolates the given points and fulfills the definition
     # of a periodic spline
     # returns that spline object
-    def interpolate_cubic_periodic(points):
-        pass
+    def interpolate_cubic_periodic(self, points):
+        # Generate normal to get a b & c
+        new_spline = spline(3)
+        new_spline.initialize_knots(points)
+        new_spline.generate_knots(points)
+        diag1, diag2, diag3, resx, resy = new_spline.generate_sole(points)
+
+        # cn and a1 still missing
+        a1 = self.alpha(1)
+        diag1.insert(0, a1)
+        # len(points) + 1) = n
+        cn = (1 - self.beta(len(points) + 1)) * (1 - self.alpha((len(points) + 1)))
+        diag3.append(cn)
+
+        control_points_x = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resx)
+        control_points_y = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resy)
+        for pt_x, pt_y in zip(control_points_x, control_points_y):
+            new_spline.control_points.append(vec2(pt_x, pt_y))
+
+        return new_spline
 
     # for splines of degree 3, generate a parallel spline with distance dist
     # the returned spline is off from the exact parallel by at most eps
