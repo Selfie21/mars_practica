@@ -9,6 +9,7 @@ import cagd.scene_2d as scene_2d
 from cagd.polyline import polyline
 from cagd.spline import spline, knots
 from cagd.utils import solve_tridiagonal_equation
+from cagd.utils import solve_almost_tridiagonal_equation
 from cagd.vec import vec2
 
 example_spline = spline(3)
@@ -27,6 +28,16 @@ c = [2, 5, 8, 7, 0]
 d = [5, 7, 8, 4, 3]
 print("Test results:")
 print(solve_tridiagonal_equation(a, b, c, d))
+print(np.linalg.solve(A, d))
+
+# test for solve almost tridiagonal equation operation
+A = np.array([[11, 2, 0, 0, 3], [3, 9, 5, 0, 0], [0, 6, 25, 8, 0], [0, 0, 3, 26, 7], [5, 0, 0, 4, 13]], dtype=float)
+a = [3, 3, 6, 3, 4]
+b = [11, 9, 25, 26, 13]
+c = [2, 5, 8, 7, 5]
+d = [5, 7, 8, 4, 3]
+print("Test results 2:")
+print(solve_almost_tridiagonal_equation(a, b, c, d))
 print(np.linalg.solve(A, d))
 
 # interpolate six points with the four different interpolation options to
