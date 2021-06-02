@@ -139,6 +139,7 @@ class spline:
 
     # Calculates and returns αi
     def alpha(self, i):
+        print("alpha i: " + str(i))
         return (self.knots[i + 2] - self.knots[i]) / (self.knots[i + 3] - self.knots[i])
 
     # Calculates and returns βi
@@ -237,21 +238,22 @@ class spline:
     # of a periodic spline
     # returns that spline object
     def interpolate_cubic_periodic(self, points):
+        print(points)
         # Generate normal to get a b & c
         new_spline = spline(3)
         new_spline.initialize_knots(points)
-        new_spline.generate_knots(points)
+        new_spline.generate_knots(spline.INTERPOLATION_EQUIDISTANT, points)
         diag1, diag2, diag3, resx, resy = new_spline.generate_sole(points)
 
         # cn and a1 still missing
-        a1 = self.alpha(1)
+        a1 = new_spline.alpha(1)
         diag1.insert(0, a1)
         # len(points) + 1) = n
-        cn = (1 - self.beta(len(points) + 1)) * (1 - self.alpha((len(points) + 1)))
+        cn = (1 - new_spline.beta(len(points) + 1)) * (1 - new_spline.alpha((len(points) + 1)))
         diag3.append(cn)
 
-        control_points_x = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resx)
-        control_points_y = utils.solve_tridiagonal_equation(diag1, diag2, diag3, resy)
+        control_points_x = utils.solve_almost_tridiagonal_equation(diag1, diag2, diag3, resx)
+        control_points_y = utils.solve_almost_tridiagonal_equation(diag1, diag2, diag3, resy)
         for pt_x, pt_y in zip(control_points_x, control_points_y):
             new_spline.control_points.append(vec2(pt_x, pt_y))
 
