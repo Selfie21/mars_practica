@@ -223,7 +223,7 @@ class spline:
                                                       + ((3 * theta_next * next_d) / ((2 * next_d) + current_d)))) + self.knots[i]
         self.quadruple_edge_knots()
 
-    # sorts points and intializes them with first and last point
+    # intializes knots with first and last point
     def initialize_knots(self, points):
         self.knots = knots(len(points))
         self.knots[0] = 0
@@ -237,7 +237,7 @@ class spline:
     # generates a spline that interpolates the given points and fulfills the definition
     # of a periodic spline
     # returns that spline object
-    def interpolate_cubic_periodic(self, points):
+    def interpolate_cubic_periodic(points):
         print(points)
         # Generate normal to get a b & c
         new_spline = spline(3)
@@ -246,7 +246,11 @@ class spline:
         diag1, diag2, diag3, resx, resy = new_spline.generate_sole(points)
 
         # cn and a1 still missing
-        a1 = new_spline.alpha(1)
+        a1 = new_spline.alpha(1) 
+        """
+        This part needs work or deleted fully. Appends diag 1 and 3 so they have a different size then res and diag2 --> not solveable
+        Without this part the spline misses the first(?) and last points. Only one iteration in sted of 3 like given in the task. Need to talk about the functionality.
+        """
         diag1.insert(0, a1)
         # len(points) + 1) = n
         cn = (1 - new_spline.beta(len(points) + 1)) * (1 - new_spline.alpha((len(points) + 1)))

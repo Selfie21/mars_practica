@@ -16,12 +16,20 @@ def unit_circle_points(num_samples):
 
 #calculates the deviation between the given spline and a unit circle
 def calculate_circle_deviation(spline):
-    pass
+    spline_area = 0
+    amount_of_knots = len(spline.knots)
+    base = utils.distance(spline.control_points[0], spline.control_points[1])
+    spline_area = 0,5 * base * amount_of_knots
+    deviation = pi - spline_area
+    """
+    Too easy thought maybe? Dividing the spline in n triangles. Calculating the triangles area and sum them all up. pi should be the area of the unit circle (pi*r^2 = pi * 1^2)
+    """
+    return deviation
 
 #interpolate 6 points with a periodic spline to create the number "8"
 pts = [vec2( 0, 2.5), vec2(-1, 1), vec2( 1,-1), vec2( 0,-2.5), vec2(-1,-1), vec2(1,1)]
 s = spline(3)
-s = s.interpolate_cubic_periodic(pts) # _periodic
+s = spline.interpolate_cubic_periodic(pts) 
 p = s.get_polyline_from_control_points()
 p.set_color("blue")
 sc = scene.scene()
