@@ -5,6 +5,7 @@ from cagd.vec import vec2
 from cagd.spline import spline, knots
 from cagd.polyline import polyline
 from math import pi, sin, cos
+import cagd.utils as utils
 
 #returns a list of num_samples points that are uniformly distributed on the unit circle
 def unit_circle_points(num_samples):
@@ -16,14 +17,10 @@ def unit_circle_points(num_samples):
 
 #calculates the deviation between the given spline and a unit circle
 def calculate_circle_deviation(spline):
-    spline_area = 0
-    amount_of_knots = len(spline.knots)
+    amount_of_knots = len(spline.control_points) - 3 # amount of control points is 3 more because 3 points are added to ensure the periodicity
     base = utils.distance(spline.control_points[0], spline.control_points[1])
-    spline_area = 0,5 * base * amount_of_knots
+    spline_area = 0.5 * base * amount_of_knots
     deviation = pi - spline_area
-    """
-    Too easy thought maybe? Dividing the spline in n triangles. Calculating the triangles area and sum them all up. pi should be the area of the unit circle (pi*r^2 = pi * 1^2)
-    """
     return deviation
 
 #interpolate 6 points with a periodic spline to create the number "8"
@@ -38,11 +35,11 @@ sc.add_element(s)
 sc.add_element(p)
 
 #generate a spline that approximates the unit circle
-#n = 8
-#circle_pts = unit_circle_points(n)
-#circle = spline.interpolate_cubic_periodic(circle_pts)
-#sc.add_element(circle)
-#calculate_circle_deviation(circle)
+n = 8
+circle_pts = unit_circle_points(n)
+circle = spline.interpolate_cubic_periodic(circle_pts)
+sc.add_element(circle)
+print(calculate_circle_deviation(circle))
 
 sc.write_image()
 sc.show()
