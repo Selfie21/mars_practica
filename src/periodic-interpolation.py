@@ -17,9 +17,13 @@ def unit_circle_points(num_samples):
 
 #calculates the deviation between the given spline and a unit circle
 def calculate_circle_deviation(spline):
-    amount_of_knots = len(spline.control_points) - 3 # amount of control points is 3 more because 3 points are added to ensure the periodicity
-    base = utils.distance(spline.control_points[0], spline.control_points[1])
-    spline_area = 0.5 * base * amount_of_knots
+    amount_of_edges = len(spline.control_points) - 3 # amount of control points is 3 more because 3 points are added to ensure the periodicity
+    points = unit_circle_points(amount_of_edges) # points on the circle
+    control_base = utils.distance(spline.control_points[0], spline.control_points[1])
+    knots_base = utils.distance(points[0], points[1])
+    control_area = 0.5 * control_base * amount_of_edges
+    knots_area = 0.5 * knots_base * amount_of_edges
+    spline_area = knots_area + ((control_area - knots_area) / 2)
     deviation = pi - spline_area
     return deviation
 
