@@ -1,10 +1,11 @@
 #! /usr/bin/python
-from cagd.polyline import polyline
-from cagd.bezier import bezier_surface, bezier_patches
-import cagd.utils as utils
-from cagd.vec import vec2
 import copy
 from math import *
+
+import cagd.utils as utils
+from cagd.bezier import bezier_patches
+from cagd.polyline import polyline
+from cagd.vec import vec2
 
 
 class spline:
@@ -155,8 +156,6 @@ class spline:
         diag1 = [0] * dim
         diag2 = [0] * dim
         diag3 = [0] * dim
-        resx = [0] * (dim - 2)
-        resy = [0] * (dim - 2)
 
         diag1[1] = -1
         for i in range(2, dim - 2):
@@ -177,17 +176,23 @@ class spline:
             diag3[i] = self.beta(i) * self.gamma(i)
         diag3[-2] = -1
 
-        for i in range(dim-2):
-            resx[i] = points[i].x
+        resx, resy = self.generate_residuum(dim - 2, points)
         resx.insert(1, 0)
         resx.insert(-1, 0)
-
-        for i in range(dim-2):
-            resy[i] = points[i].y
         resy.insert(1, 0)
         resy.insert(-1, 0)
-
         return diag1, diag2, diag3, resx, resy
+
+    def generate_residuum(self, dim, points):
+        resx = [0] * dim
+        resy = [0] * dim
+        for i in range(dim):
+            resx[i] = points[i].x
+
+        for i in range(dim):
+            resy[i] = points[i].y
+
+        return resx, resy
 
     def generate_knots(self, mode, points):
         m = len(self.knots)
@@ -209,17 +214,18 @@ class spline:
             for i in range(0, m - 1):
                 prev_point = points[i - 1]
                 current_point = points[i]
-                next_point = points[i+1]
+                next_point = points[i + 1]
 
                 theta = min(pi - utils.angle(prev_point, current_point), pi / 2)
                 theta_next = min(pi - utils.angle(current_point, next_point), pi / 2)
 
                 prev_d = 0 if i == 1 else utils.distance(points[i - 1], prev_point)
                 current_d = utils.distance(prev_point, current_point)
-                next_d = 0 if i == m-1 else utils.distance(current_point, next_point)
+                next_d = 0 if i == m - 1 else utils.distance(current_point, next_point)
                 self.knots[i + 1] = (current_d * (1
-                                                      + ((3 * theta * prev_d) / ((2 * prev_d) + current_d))
-                                                      + ((3 * theta_next * next_d) / ((2 * next_d) + current_d)))) + self.knots[i]
+                                                  + ((3 * theta * prev_d) / ((2 * prev_d) + current_d))
+                                                  + ((3 * theta_next * next_d) / ((2 * next_d) + current_d)))) + \
+                                    self.knots[i]
         self.quadruple_edge_knots()
 
     # intializes knots with first and last point
@@ -241,36 +247,31 @@ class spline:
         points.append(points[0])
         dim = len(points) - 1
 
-        new_spline.knots = knots(dim+7)
+        new_spline.knots = knots(dim + 7)
         new_spline.knots[0] = 0
-        for i in range(1, dim+7):
+        for i in range(1, dim + 7):
             new_spline.knots[i] = i
 
-        resx = [0] * dim
-        resy = [0] * dim
-        diag1 = [(1/6)] * dim
+        diag1 = [(1 / 6)] * dim
         diag2 = [(4 / 6)] * dim
         diag3 = [(1 / 6)] * dim
 
-        for i in range(dim):
-            resx[i] = points[i].x
-
-        for i in range(dim):
-            resy[i] = points[i].y
-
+        resx, resy = new_spline.generate_residuum(dim, points)
         control_points_x = utils.solve_almost_tridiagonal_equation(diag1, diag2, diag3, resx)
         control_points_y = utils.solve_almost_tridiagonal_equation(diag1, diag2, diag3, resy)
-
         for pt_x, pt_y in zip(control_points_x, control_points_y):
             new_spline.control_points.append(vec2(pt_x, pt_y))
 
-        new_spline.control_points.insert(0, vec2(control_points_x[len(control_points_x) - 1],
-                                                 control_points_y[len(control_points_y) - 1]))
-        new_spline.control_points.append(vec2(control_points_x[0], control_points_y[0]))
-        new_spline.control_points.append(vec2(control_points_x[1], control_points_y[1]))
-        new_spline.control_points.append(vec2(control_points_x[2], control_points_y[2]))
-        new_spline.control_points.append(vec2(control_points_x[3], control_points_y[3]))
+        new_spline.convert_to_periodic_controlpoints(control_points_x, control_points_y)
         return new_spline
+
+    def convert_to_periodic_controlpoints(self, control_points_x, control_points_y):
+        self.control_points.insert(0, vec2(control_points_x[len(control_points_x) - 1],
+                                           control_points_y[len(control_points_y) - 1]))
+        self.control_points.append(vec2(control_points_x[0], control_points_y[0]))
+        self.control_points.append(vec2(control_points_x[1], control_points_y[1]))
+        self.control_points.append(vec2(control_points_x[2], control_points_y[2]))
+        self.control_points.append(vec2(control_points_x[3], control_points_y[3]))
 
     # for splines of degree 3, generate a parallel spline with distance dist
     # the returned spline is off from the exact parallel by at most eps
