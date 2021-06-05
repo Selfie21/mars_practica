@@ -39,7 +39,6 @@ n = 8
 circle_pts = unit_circle_points(n)
 circle = spline.interpolate_cubic_periodic(circle_pts)
 sc.add_element(circle)
-print(calculate_circle_deviation(circle))
 
 sc.write_image()
 sc.show()

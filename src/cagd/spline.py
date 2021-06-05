@@ -241,9 +241,9 @@ class spline:
         points.append(points[0])
         dim = len(points) - 1
 
-        new_spline.knots = knots(dim+5)
+        new_spline.knots = knots(dim+7)
         new_spline.knots[0] = 0
-        for i in range(1, dim+5):
+        for i in range(1, dim+7):
             new_spline.knots[i] = i
 
         resx = [0] * dim
@@ -268,6 +268,8 @@ class spline:
                                                  control_points_y[len(control_points_y) - 1]))
         new_spline.control_points.append(vec2(control_points_x[0], control_points_y[0]))
         new_spline.control_points.append(vec2(control_points_x[1], control_points_y[1]))
+        new_spline.control_points.append(vec2(control_points_x[2], control_points_y[2]))
+        new_spline.control_points.append(vec2(control_points_x[3], control_points_y[3]))
         return new_spline
 
     # for splines of degree 3, generate a parallel spline with distance dist
