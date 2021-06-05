@@ -139,7 +139,6 @@ class spline:
 
     # Calculates and returns αi
     def alpha(self, i):
-        print("alpha i: " + str(i))
         return (self.knots[i + 2] - self.knots[i]) / (self.knots[i + 3] - self.knots[i])
 
     # Calculates and returns βi
@@ -238,29 +237,37 @@ class spline:
     # of a periodic spline
     # returns that spline object
     def interpolate_cubic_periodic(points):
-        print(points)
-        # Generate normal to get a b & c
         new_spline = spline(3)
-        new_spline.initialize_knots(points)
-        new_spline.generate_knots(spline.INTERPOLATION_EQUIDISTANT, points)
-        diag1, diag2, diag3, resx, resy = new_spline.generate_sole(points)
+        points.append(points[0])
+        dim = len(points) - 1
 
-        # cn and a1 still missing
-        a1 = new_spline.alpha(1) 
-        """
-        This part needs work or deleted fully. Appends diag 1 and 3 so they have a different size then res and diag2 --> not solveable
-        Without this part the spline misses the first(?) and last points. Only one iteration in sted of 3 like given in the task. Need to talk about the functionality.
-        """
-        diag1.insert(0, a1)
-        # len(points) + 1) = n
-        cn = (1 - new_spline.beta(len(points) + 1)) * (1 - new_spline.alpha((len(points) + 1)))
-        diag3.append(cn)
+        new_spline.knots = knots(dim+5)
+        new_spline.knots[0] = 0
+        for i in range(1, dim+5):
+            new_spline.knots[i] = i
+
+        resx = [0] * dim
+        resy = [0] * dim
+        diag1 = [(1/6)] * dim
+        diag2 = [(4 / 6)] * dim
+        diag3 = [(1 / 6)] * dim
+
+        for i in range(dim):
+            resx[i] = points[i].x
+
+        for i in range(dim):
+            resy[i] = points[i].y
 
         control_points_x = utils.solve_almost_tridiagonal_equation(diag1, diag2, diag3, resx)
         control_points_y = utils.solve_almost_tridiagonal_equation(diag1, diag2, diag3, resy)
+
         for pt_x, pt_y in zip(control_points_x, control_points_y):
             new_spline.control_points.append(vec2(pt_x, pt_y))
 
+        new_spline.control_points.insert(0, vec2(control_points_x[len(control_points_x) - 1],
+                                                 control_points_y[len(control_points_y) - 1]))
+        new_spline.control_points.append(vec2(control_points_x[0], control_points_y[0]))
+        new_spline.control_points.append(vec2(control_points_x[1], control_points_y[1]))
         return new_spline
 
     # for splines of degree 3, generate a parallel spline with distance dist
