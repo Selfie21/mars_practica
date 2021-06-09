@@ -27,7 +27,7 @@ def solve_tridiagonal_equation(diag1, diag2, diag3, res):
     z[dim] = 1 / ((diag2[dim]) - (diag1[dim] * v[dim]))
     y[dim] = z[dim] * (res[dim] - (diag1[dim] * y[dim - 1]))
     x[dim] = y[dim]
-    for k in reversed(range(dim - 1)):
+    for k in reversed(range(dim)):
         x[k] = y[k] - (v[k + 1] * x[k + 1])
     solution = x
     return solution

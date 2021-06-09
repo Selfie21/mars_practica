@@ -45,7 +45,11 @@ class spline:
         return self.evaluate(t)
 
     def tangent(self, t):
-        pass
+        a, b = self.support()
+        assert (a <= t <= b)
+        if t == self.knots[len(self.knots) - self.degree - 1]:
+            t = t - 0.000001
+        return self.de_boor(t, 2)[1] - self.de_boor(t, 2)[0]
 
     def get_color(self):
         return self.color
@@ -277,7 +281,39 @@ class spline:
     # the returned spline is off from the exact parallel by at most eps
     def generate_parallel(self, dist, eps):
         assert (self.degree == 3)
-        para_spline = None
+        para_spline = self.interpolate_parallel_spline(dist)
+
+        while not self.distance_threshold_between_splines(dist, eps, para_spline):
+            para_spline = self.interpolate_parallel_spline(dist)
+
+        return para_spline
+
+    # returns of the distance inbetween two knot points between this spline and the parallel spline is smaller than eps
+    # if it isn't adds a knot in between these two knots
+    def distance_threshold_between_splines(self, distance, eps, parallel_spline):
+        for i in range(3, len(self.knots)-3):
+            inbetween = self.knots[i] + (self.knots[i+1] - self.knots[i])/2
+            normal_pt = self.evaluate(inbetween)
+            para_pt = parallel_spline.evaluate(inbetween)
+            current_distance = abs(utils.distance(normal_pt, para_pt))
+            if (current_distance - distance) > eps:
+                self.insert_knot(inbetween)
+                return True  # TODO: Change to False for proper implementation when insert knot is finished
+        return True
+
+    # creates a parallel spline
+    def interpolate_parallel_spline(self, dist):
+        interpolation_points = [self.evaluate(knot) for knot in self.knots[3:-3]]
+        interpolation_points = list(map(lambda x: x + vec2(0.1, 0.1), interpolation_points))
+
+        for i in range(len(interpolation_points)):
+            tangent = self.tangent(interpolation_points[i].x)
+            tangent *= 1/utils.euklidian_norm(tangent)
+            interpolation_points[i] += (dist * vec2(1/tangent.y, -tangent.x))
+
+        interpolation_points = list(map(lambda x: x - vec2(0.1, 0.1), interpolation_points))
+        para_spline = spline.interpolate_cubic(spline.INTERPOLATION_CHORDAL, interpolation_points)
+        para_spline.knots = copy.deepcopy(self.knots)
         return para_spline
 
     # generates a rotational surface by rotating the spline around the z axis
