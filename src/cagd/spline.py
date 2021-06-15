@@ -304,14 +304,15 @@ class spline:
     # creates a parallel spline
     def interpolate_parallel_spline(self, dist):
         interpolation_points = [self.evaluate(knot) for knot in self.knots[3:-3]]
-        interpolation_points = list(map(lambda x: x + vec2(0.1, 0.1), interpolation_points))
+        index = 0
 
-        for i in range(len(interpolation_points)):
-            tangent = self.tangent(interpolation_points[i].x)
-            tangent *= 1/utils.euklidian_norm(tangent)
-            interpolation_points[i] += (dist * vec2(1/tangent.y, -tangent.x))
+        for knot in self.knots[3:-3]:
+            tangent = self.tangent(knot)
+            normal = vec2(1/tangent.y, -tangent.x)
+            normal *= 1/utils.euklidian_norm(normal)
+            interpolation_points[index] += (dist * normal)
+            index += 1
 
-        interpolation_points = list(map(lambda x: x - vec2(0.1, 0.1), interpolation_points))
         para_spline = spline.interpolate_cubic(spline.INTERPOLATION_CHORDAL, interpolation_points)
         para_spline.knots = copy.deepcopy(self.knots)
         return para_spline
