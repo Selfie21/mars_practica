@@ -91,7 +91,15 @@ class spline:
     # adjusts the control points such that it represents the same function,
     # but with an added knot
     def insert_knot(self, t):
-        pass
+        self.knots.insert(t)
+        index = self.knots.knot_index(t)
+        alpha = (t - self.knots[index + 1]) / (self.knots[index + 4] - self.knots[index + 1])
+        d = (1 - alpha) * self.control_points[index - 1] + alpha * self.control_points[index]
+        self.control_points.insert(index, d)
+        for k in range(index - 1, index - 3):
+            beta = (t - self.knots[k]) / (self.knots[k+3] - self.knots[k])
+            control_points[k] = (1 - beta) * control_points[k - 1] + beta * control_points[k]
+            # i + 1 bis i + 3 müssen alle neu berechnet werden i + 4 = index
 
     def get_axis_aligned_bounding_box(self):
         min_vec = copy.copy(self.control_points[0])
@@ -298,7 +306,7 @@ class spline:
             current_distance = abs(utils.distance(normal_pt, para_pt))
             if (current_distance - distance) > eps:
                 self.insert_knot(inbetween)
-                return True  # TODO: Change to False for proper implementation when insert knot is finished
+                return False  # TODO: Change to False for proper implementation when insert knot is finished
         return True
 
     # creates a parallel spline
