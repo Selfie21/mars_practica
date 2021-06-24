@@ -91,15 +91,17 @@ class spline:
     # adjusts the control points such that it represents the same function,
     # but with an added knot
     def insert_knot(self, t):
-        self.knots.insert(t)
         index = self.knots.knot_index(t)
-        alpha = (t - self.knots[index + 1]) / (self.knots[index + 4] - self.knots[index + 1])
-        d = (1 - alpha) * self.control_points[index - 1] + alpha * self.control_points[index]
+        prev_controlpoints = copy.deepcopy(self.control_points)
+        for i in range(index-2, index):
+            alpha = (t - self.knots[i]) / (self.knots[i + 3] - self.knots[i])
+            self.control_points[i] = (1 - alpha) * prev_controlpoints[i - 1] + alpha * prev_controlpoints[i]
+
+        alpha = (t - self.knots[index]) / (self.knots[index + 3] - self.knots[index])
+        d = (1 - alpha) * prev_controlpoints[index - 1] + alpha * prev_controlpoints[index]
         self.control_points.insert(index, d)
-        for k in range(index - 1, index - 3):
-            beta = (t - self.knots[k]) / (self.knots[k+3] - self.knots[k])
-            control_points[k] = (1 - beta) * control_points[k - 1] + beta * control_points[k]
-            # i + 1 bis i + 3 müssen alle neu berechnet werden i + 4 = index
+        self.knots.insert(t)
+
 
     def get_axis_aligned_bounding_box(self):
         min_vec = copy.copy(self.control_points[0])
@@ -303,10 +305,10 @@ class spline:
             inbetween = self.knots[i] + (self.knots[i+1] - self.knots[i])/2
             normal_pt = self.evaluate(inbetween)
             para_pt = parallel_spline.evaluate(inbetween)
-            current_distance = abs(utils.distance(normal_pt, para_pt))
-            if (current_distance - distance) > eps:
+            current_distance = utils.distance(normal_pt, para_pt)
+            if abs((current_distance - abs(distance))) > eps:
                 self.insert_knot(inbetween)
-                return False  # TODO: Change to False for proper implementation when insert knot is finished
+                return False
         return True
 
     # creates a parallel spline
@@ -316,7 +318,7 @@ class spline:
 
         for knot in self.knots[3:-3]:
             tangent = self.tangent(knot)
-            normal = vec2(1/tangent.y, -tangent.x)
+            normal = vec2(tangent.y, -tangent.x)
             normal *= 1/utils.euklidian_norm(normal)
             interpolation_points[index] += (dist * normal)
             index += 1

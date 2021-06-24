@@ -30,7 +30,7 @@ ptsT = [vec2(.5, 0), vec2(.5, .5), vec2(.5, 1), vec2(1, 1), vec2(0, 1)]
 ptsT = [x + vec2(1.25, 0) for x in ptsT]
 
 sK = spline.interpolate_cubic(spline.INTERPOLATION_CHORDAL, ptsK)
-paraK = spline.generate_parallel(sK, 0.1, 0.05)
+paraK = spline.generate_parallel(sK, 0.1, 0.005)
 sI = spline.interpolate_cubic(spline.INTERPOLATION_CHORDAL, ptsI)
 sT = spline.interpolate_cubic(spline.INTERPOLATION_CHORDAL, ptsT)
 paraK.set_color("#009682")
