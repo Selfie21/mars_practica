@@ -5,7 +5,7 @@ from math import *
 import cagd.utils as utils
 from cagd.bezier import bezier_patches
 from cagd.polyline import polyline
-from cagd.vec import vec2
+from cagd.vec import vec2, vec3
 
 
 class spline:
@@ -93,7 +93,7 @@ class spline:
     def insert_knot(self, t):
         index = self.knots.knot_index(t)
         prev_controlpoints = copy.deepcopy(self.control_points)
-        for i in range(index-2, index):
+        for i in range(index - 2, index):
             alpha = (t - self.knots[i]) / (self.knots[i + 3] - self.knots[i])
             self.control_points[i] = (1 - alpha) * prev_controlpoints[i - 1] + alpha * prev_controlpoints[i]
 
@@ -101,7 +101,6 @@ class spline:
         d = (1 - alpha) * prev_controlpoints[index - 1] + alpha * prev_controlpoints[index]
         self.control_points.insert(index, d)
         self.knots.insert(t)
-
 
     def get_axis_aligned_bounding_box(self):
         min_vec = copy.copy(self.control_points[0])
@@ -301,8 +300,8 @@ class spline:
     # returns of the distance inbetween two knot points between this spline and the parallel spline is smaller than eps
     # if it isn't adds a knot in between these two knots
     def distance_threshold_between_splines(self, distance, eps, parallel_spline):
-        for i in range(3, len(self.knots)-3):
-            inbetween = self.knots[i] + (self.knots[i+1] - self.knots[i])/2
+        for i in range(3, len(self.knots) - 3):
+            inbetween = self.knots[i] + (self.knots[i + 1] - self.knots[i]) / 2
             normal_pt = self.evaluate(inbetween)
             para_pt = parallel_spline.evaluate(inbetween)
             current_distance = utils.distance(normal_pt, para_pt)
@@ -319,7 +318,7 @@ class spline:
         for knot in self.knots[3:-3]:
             tangent = self.tangent(knot)
             normal = vec2(tangent.y, -tangent.x)
-            normal *= 1/utils.euklidian_norm(normal)
+            normal *= 1 / utils.euklidian_norm(normal)
             interpolation_points[index] += (dist * normal)
             index += 1
 
@@ -332,7 +331,32 @@ class spline:
     # num_samples refers to the number of interpolation points in the rotational direction
     # returns a spline surface object in three dimensions
     def generate_rotation_surface(self, num_samples):
-        pass
+
+        surface = spline_surface((2, 3))
+
+        for ctrl_point in self.control_points:
+
+            rotation_points = []
+            for i in range(num_samples):
+                rotation_point = self.generate_rotation_point(ctrl_point, i, num_samples)
+                rotation_points.append(rotation_point)
+
+            control_points_periodic3d = []
+            circle_spline = spline.interpolate_cubic_periodic(rotation_points)
+            control_points_periodic2d = circle_spline.control_points
+            z = ctrl_point.y
+            for control_point2d in control_points_periodic2d:
+                net_point = vec3(control_point2d.x, control_point2d.y, z)
+                control_points_periodic3d.append(net_point)
+
+            surface.knots = (self.knots, circle_spline.knots)
+            surface.control_points.append(control_points_periodic3d)
+        return surface
+
+    def generate_rotation_point(self, ctrl_point, index, num_samples):
+        return vec3(ctrl_point.x * cos((2 * pi * index) / num_samples),
+                    ctrl_point.x * sin((2 * pi * index) / num_samples),
+                    ctrl_point.y)
 
 
 class spline_surface:
@@ -340,14 +364,14 @@ class spline_surface:
     DIR_U = 0
     DIR_V = 1
 
-    # creates a spline of degrees n,m
-    # degree is a tuple (n,m)
+    # creates a spline of degrees m,n
+    # degree is a tuple (m,n)
     def __init__(self, degree):
         du, dv = degree
         assert (du >= 1 and dv >= 1)
         self.degree = degree
         self.knots = (None, None)  # tuple of both knot vectors
-        self.control_points = [[]]  # 2dim array of control points
+        self.control_points = []  # 2dim array of control points
 
     # checks if the number of knots, controlpoints and degree define a valid spline
     def validate(self):
