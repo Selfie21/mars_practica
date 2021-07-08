@@ -478,6 +478,31 @@ class spline_surface:
 
     def to_bezier_patches(self):
         patches = bezier_patches()
+        m = len(self.control_points)
+        n = len(self.control_points[0])
+        z = 0
+        for i in range(m):
+            q = 0
+            for j in range(n):
+                p = 0
+                while(self.knots[i][j] == self.knots[i][j+1]):
+                    p = p + 1
+                    j = j + 1
+                for k in range(p):
+                    self.__insert_knot_u(self.knots[i][j])
+                n = n + p
+                z = z + 1
+            while(self.knots[i][j] == self.knots[i+1][j]):
+                q = q + 1
+                i = i + 1
+            for l in range(q):
+                self.__insert_knot_v(self.knots[i][j])
+        for o in range(z):
+            new_patch = 0 * [m][n]
+            for r in range(m):
+                for s in range(n):
+                    new_patch [r][s] = self.control_points[o + r][o + s]
+            patches.append(new_patch)
         return patches
 
 
