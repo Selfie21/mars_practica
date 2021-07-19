@@ -478,31 +478,25 @@ class spline_surface:
 
     def to_bezier_patches(self):
         patches = bezier_patches()
-        m = len(self.control_points)
-        n = len(self.control_points[0])
-        z = 0
-        for i in range(m):
-            q = 0
-            for j in range(n):
-                p = 0
-                while(self.knots[i][j] == self.knots[i][j+1]):
-                    p = p + 1
-                    j = j + 1
-                for k in range(p):
-                    self.__insert_knot_u(self.knots[i][j])
-                n = n + p
-                z = z + 1
-            while(self.knots[i][j] == self.knots[i+1][j]):
-                q = q + 1
+        #m, n = 3
+        m=3
+        n=3
+        for i in range(len(self.knots[0])):
+            p=0
+            if(self.knots[0][i] == self.knots[0][i+1]):
+                p = p + 1
+            else:
+                for j in range(m - p):
+                    self.insert_knot(self.DIR_U, self.knots[0][i])
                 i = i + 1
-            for l in range(q):
-                self.__insert_knot_v(self.knots[i][j])
-        for o in range(z):
-            new_patch = 0 * [m][n]
-            for r in range(m):
-                for s in range(n):
-                    new_patch [r][s] = self.control_points[o + r][o + s]
-            patches.append(new_patch)
+        for i in range(len(self.knots[1])):
+            p=0
+            if(self.knots[1][i] == self.knots[1][i+1]):
+                p = p + 1
+            else:
+                for j in range(n - p):
+                    self.insert_knot(self.DIR_V, self.knots[1][i])
+                i = i +p
         return patches
 
 
