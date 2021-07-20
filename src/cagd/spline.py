@@ -1,9 +1,10 @@
 #! /usr/bin/python
 import copy
-from math import *
+import numpy as np
+from math import sqrt, pi, sin, cos
 
 import cagd.utils as utils
-from cagd.bezier import bezier_patches
+from cagd.bezier import bezier_patches, bezier_surface
 from cagd.polyline import polyline
 from cagd.vec import vec2, vec3
 
@@ -332,7 +333,7 @@ class spline:
     # returns a spline surface object in three dimensions
     def generate_rotation_surface(self, num_samples):
 
-        surface = spline_surface((2, 3))
+        surface = spline_surface((3, 3))
 
         for ctrl_point in self.control_points:
 
@@ -478,25 +479,34 @@ class spline_surface:
 
     def to_bezier_patches(self):
         patches = bezier_patches()
-        #m, n = 3
-        m=3
-        n=3
-        for i in range(len(self.knots[0])):
-            p=0
-            if(self.knots[0][i] == self.knots[0][i+1]):
-                p = p + 1
-            else:
-                for j in range(m - p):
-                    self.insert_knot(self.DIR_U, self.knots[0][i])
-                i = i + 1
-        for i in range(len(self.knots[1])):
-            p=0
-            if(self.knots[1][i] == self.knots[1][i+1]):
-                p = p + 1
-            else:
-                for j in range(n - p):
-                    self.insert_knot(self.DIR_V, self.knots[1][i])
-                i = i +p
+        m = self.degree[0]
+        n = self.degree[1]
+
+        inner_knots_u = self.knots[0][m:-(m+1)]
+        inner_knots_v = self.knots[1][n:-(n+1)]
+
+        for knot in inner_knots_u:
+            p = inner_knots_u.count(knot)
+            while p < m:
+                self.insert_knot(self.DIR_U, knot)
+                p += 1
+
+        for knot in inner_knots_v:
+            p = inner_knots_v.count(knot)
+            while p < m:
+                self.insert_knot(self.DIR_V, knot)
+                p += 1
+
+        control_points = np.array(self.control_points).flatten()
+        num_control_points_per_patch = (n+1)*(m+1)
+
+        for count in range(len(self.control_points)*len(self.control_points[0])):
+            if count % (num_control_points_per_patch - (n+1)) == 0 and count != 0:
+                surface = bezier_surface((3, 3))
+                control_points_for_patch = control_points[count+(n+1)-num_control_points_per_patch:count+(n+1)].reshape(4, 4)
+                surface.control_points = control_points_for_patch.tolist()
+                patches.append(surface)
+
         return patches
 
 
