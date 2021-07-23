@@ -24,7 +24,7 @@ sc = scene_2d.scene()
 sc.set_resolution(900)
 sc.add_element(spl)
 sc.write_image()
-#sc.show()
+sc.show()
 
 surface = spl.generate_rotation_surface(6)
 

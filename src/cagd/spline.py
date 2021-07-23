@@ -1,6 +1,5 @@
 #! /usr/bin/python
 import copy
-import numpy as np
 from math import sqrt, pi, sin, cos
 
 import cagd.utils as utils
@@ -482,8 +481,8 @@ class spline_surface:
         m = self.degree[0]
         n = self.degree[1]
 
-        inner_knots_u = self.knots[0][m:-(m+1)]
-        inner_knots_v = self.knots[1][n:-(n+1)]
+        inner_knots_u = self.knots[0][m:-(m + 1)]
+        inner_knots_v = self.knots[1][n:-(n + 1)]
 
         for knot in inner_knots_u:
             p = inner_knots_u.count(knot)
@@ -497,16 +496,12 @@ class spline_surface:
                 self.insert_knot(self.DIR_V, knot)
                 p += 1
 
-        control_points = np.array(self.control_points).flatten()
-        num_control_points_per_patch = (n+1)*(m+1)
-
-        for count in range(len(self.control_points)*len(self.control_points[0])):
-            if count % (num_control_points_per_patch - (n+1)) == 0 and count != 0:
-                surface = bezier_surface((3, 3))
-                control_points_for_patch = control_points[count+(n+1)-num_control_points_per_patch:count+(n+1)].reshape(4, 4)
-                surface.control_points = control_points_for_patch.tolist()
+        for i in range(0, len(self.control_points) - 4, 3):
+            for j in range(0, len(self.control_points[i]) - 4, 3):
+                surface = bezier_surface((m, n))
+                control_points_for_srf = [self.control_points[i][j:(j + n + 1)] for i in range(i, (i + m + 1))]
+                surface.control_points = control_points_for_srf
                 patches.append(surface)
-
         return patches
 
 
