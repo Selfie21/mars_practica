@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
 import copy
+from math import sqrt
 
+import cagd.utils as utils
 from cagd.polyline import polyline
 
 
@@ -100,7 +102,7 @@ class bezier_surface:
         self.control_points = [[None for i in range(d2 + 1)] for j in range(d1 + 1)]
         white = (1, 1, 1)
         self.color = (white, white, white, white)
-        self.curveature = (None, None, None, None)
+        self.curvature = (None, None, None, None)
 
     def set_control_point(self, index1, index2, val):
         assert (index1 >= 0 and index1 <= self.degree[0])
@@ -121,10 +123,10 @@ class bezier_surface:
     def set_colors(self, c00, c01, c10, c11):
         self.color = (c00, c01, c10, c11)
 
-    # sets the curveature at the corners
-    # c00 is the curveature at u=v=0, c01 is the curveature at u=0 v=1, etc
-    def set_curveature(self, c00, c01, c10, c11):
-        self.curveature = (c00, c01, c10, c11)
+    # sets the curvature at the corners
+    # c00 is the curvature at u=v=0, c01 is the curvature at u=0 v=1, etc
+    def set_curvature(self, c00, c01, c10, c11):
+        self.curvature = (c00, c01, c10, c11)
 
     def __call__(self, t):
         t1, t2 = t
@@ -195,10 +197,10 @@ class bezier_surface:
 
 
 class bezier_patches:
-    CURVEATURE_GAUSSIAN = 0
-    CURVEATURE_AVERAGE = 1
-    CURVEATURE_PRINCIPAL_MAX = 2  # Maximale Hauptkruemmung
-    CURVEATURE_PRINCIPAL_MIN = 3  # Minimale Hauptkruemmung
+    CURVATURE_GAUSSIAN = 0
+    CURVATURE_AVERAGE = 1
+    CURVATURE_PRINCIPAL_MAX = 2  # Maximale Hauptkruemmung
+    CURVATURE_PRINCIPAL_MIN = 3  # Minimale Hauptkruemmung
     COLOR_MAP_LINEAR = 4
     COLOR_MAP_CUT = 5
     COLOR_MAP_CLASSIFICATION = 6
@@ -235,28 +237,48 @@ class bezier_patches:
                     new_patches.append(n)
             self.patches = new_patches
 
+    # TODO: implement curvature for all 4 corners by overlapping into different patches too tired to do now :zzz
     def visualize_curvature(self, curvature_mode, color_map):
-
+        all_curvature = []
         for patch in self.patches:
-            d_u, d_u_u, d_v, d_v_v, d_u_v = bezier_patches.get_all_derivatives(patch)
-            print("TADA")
+            current_curvature = bezier_patches.calculate_curvature(patch, curvature_mode)
+            all_curvature.append(current_curvature)
 
-
-
-        # calculate curveatures at each corner point
         # set colors according to color map
         pass
 
     @staticmethod
-    def get_all_derivatives(patch):
-        d_u = bezier_patches.partial_derivatives(patch, 'u', 1)
-        d_u_u = bezier_patches.partial_derivatives(patch, 'u', 2)
-        d_v = bezier_patches.partial_derivatives(patch, 'v', 1)
-        d_v_v = bezier_patches.partial_derivatives(patch, 'v', 2)
-        d_u_v = bezier_patches.partial_derivatives(patch, 'both', 2)
-        return d_u, d_u_u, d_v, d_v_v, d_u_v
+    def calculate_curvature(patch, curvature_mode):
+        b_u, b_u_u, b_v, b_v_v, b_u_v = bezier_patches.get_all_derivatives(patch)
+        n = b_u.cross_product(b_v) * (1 / utils.euclidean_norm(b_u.cross_product(b_v)))
+        g = [b_u.dot(b_u), b_u.dot(b_v), b_v.dot(b_u), b_v.dot(b_v)]
+        h = [n.dot(b_u_u), n.dot(b_u_v), n.dot(b_u_v), n.dot(b_v_v)]
 
-    # creates the nth derivative in the corresponding direction for a specific patch
+        gaussian = utils.determinant_m2(h) / utils.determinant_m2(g)
+        average = (h[0] * g[3]) - (2 * h[1] * g[1]) + (h[3] * g[0]) / (2 * ((g[0] * g[3]) - (g[1] * g[1])))
+
+        if curvature_mode == bezier_patches.CURVATURE_GAUSSIAN:
+            return gaussian
+        elif curvature_mode == bezier_patches.CURVATURE_AVERAGE:
+            return average
+        elif curvature_mode == bezier_patches.CURVATURE_PRINCIPAL_MAX:
+            return average + sqrt((average * average) - gaussian)
+        elif curvature_mode == bezier_patches.CURVATURE_PRINCIPAL_MIN:
+            return average - sqrt((average * average) - gaussian)
+        else:
+            raise ValueError('Curvature Mode not available!')
+
+    @staticmethod
+    def get_all_derivatives(patch):
+        b_u = bezier_patches.partial_derivatives(patch, 'u', 1)[-1][-1]
+        b_u_u = bezier_patches.partial_derivatives(patch, 'u', 2)[-1][0]
+        b_v = bezier_patches.partial_derivatives(patch, 'v', 1)[0][-1]
+        b_v_v = bezier_patches.partial_derivatives(patch, 'v', 2)[0][0]
+        d_u_v = bezier_patches.partial_derivatives(patch, 'both', 2)
+        b_u_v = d_u_v[int(len(d_u_v) / 2)][int(len(d_u_v) / 2)]
+        return b_u, b_u_u, b_v, b_v_v, b_u_v
+
+    # creates the k_th derivative in the corresponding direction for a specific patch
     @staticmethod
     def partial_derivatives(patch, direction, k):
         m = patch.degree[0]
@@ -285,7 +307,7 @@ class bezier_patches:
                 # multi case
                 elif direction == 'u':
                     deriv[i][j] = scale * (m - 1) * (
-                                control_points[i + 2][j] - 2 * control_points[i + 1][j] + control_points[i][j])
+                            control_points[i + 2][j] - 2 * control_points[i + 1][j] + control_points[i][j])
                 elif direction == 'v':
                     deriv[i][j] = scale * (n - 1) * (
                             control_points[i][j + 2] - 2 * control_points[i][j + 1] + control_points[i][j])

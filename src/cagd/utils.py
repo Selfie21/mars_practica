@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from math import sqrt, acos
 
-from cagd.vec import vec2
+from cagd.vec import vec2, vec3
 
 
 # solves the system of linear equations Ax = res
@@ -32,6 +32,7 @@ def solve_tridiagonal_equation(diag1, diag2, diag3, res):
     solution = x
     return solution
 
+
 # solves the system of linear equations Ax = res
 # where A is an almost tridiagonal matrix with diag2 representing the main diagonal
 # diag1 and diag3 represent the lower and upper diagonal respectively
@@ -50,7 +51,7 @@ def solve_almost_tridiagonal_equation(diag1, diag2, diag3, res):
     x = [0] * dim
     s[-1] = 1
     dim = dim - 1  # Adjusting dim to fit the max index
-    for i in range(0, dim): # iterating from second index to second last index
+    for i in range(0, dim):  # iterating from second index to second last index
         z[i] = 1 / (diag2[i] + diag1[i] * v[i - 1])
         v[i] = -z[i] * diag3[i]
         y[i] = z[i] * (res[i] - diag1[i] * y[i - 1])
@@ -60,7 +61,7 @@ def solve_almost_tridiagonal_equation(diag1, diag2, diag3, res):
         t[k] = v[k] * t[k + 1] + s[k]
         w[k] = v[k] * w[k + 1] + y[k]
     x[dim] = (res[dim] - diag3[dim] * w[0] - diag1[dim] * w[dim - 1]) / (
-                diag3[dim] * t[0] + diag1[dim] * t[dim - 1] + diag2[dim])
+            diag3[dim] * t[0] + diag1[dim] * t[dim - 1] + diag2[dim])
     for k in reversed(range(0, dim)):
         x[k] = t[k] * x[dim] + w[k]
     return x
@@ -68,15 +69,27 @@ def solve_almost_tridiagonal_equation(diag1, diag2, diag3, res):
 
 # Algebraic
 def distance(a, b):
-    diff = vec2(b.x - a.x, b.y - a.y)
-    return euklidian_norm(diff)
+    if isinstance(a, vec2):
+        diff = vec2(b.x - a.x, b.y - a.y)
+        return euclidean_norm(diff)
+    elif isinstance(a, vec3):
+        diff = vec3(b.x - a.x, b.y - a.y, b.z - a.z)
+        return euclidean_norm(diff)
 
 
-def euklidian_norm(a):
-    return sqrt(a.x ** 2 + a.y ** 2)
+def euclidean_norm(a):
+    if isinstance(a, vec2):
+        return sqrt(a.x ** 2 + a.y ** 2)
+    elif isinstance(a, vec3):
+        return sqrt(a.x ** 2 + a.y ** 2)
 
 
 def angle(a, b):
     vector_product = a.x * b.x + a.y * b.y
-    cosx = vector_product / (euklidian_norm(a) * euklidian_norm(b))
+    cosx = vector_product / (euclidean_norm(a) * euclidean_norm(b))
     return acos(cosx)
+
+
+# matrix is 2x2 in list form for meaning each row gets iterated one after another
+def determinant_m2(matrix):
+    return (matrix[0] * matrix[3]) - (matrix[1] * matrix[2])

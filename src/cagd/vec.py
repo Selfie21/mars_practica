@@ -1,11 +1,13 @@
 #!/usr/bin/python
 import math
+
+
 class vec3:
     def __init__(self, a, b, c):
         self.x = a
         self.y = b
         self.z = c
-    
+
     def __str__(self):
         return "(" + str(self.x) + "," + str(self.y) + "," + str(self.z) + ")"
 
@@ -26,7 +28,7 @@ class vec3:
 
     def __ne__(self, other):
         return not self == other
-    
+
     def __neg__(self):
         return -1 * self
 
@@ -45,12 +47,17 @@ class vec3:
     def __copy__(self):
         return vec2(self.x, self.y, self.z)
 
+    def cross_product(self, other):
+        return vec3((self.y * other.z) - (self.z * other.y),
+                    (self.z * other.x) - (self.x * other.z),
+                    (self.x * other.y) - (self.y * other.x))
+
 
 class vec2:
     def __init__(self, a, b):
         self.x = a
         self.y = b
-    
+
     def __str__(self):
         return "(" + str(self.x) + "," + str(self.y) + ")"
 
@@ -71,7 +78,7 @@ class vec2:
 
     def __ne__(self, other):
         return not self == other
-    
+
     def __neg__(self):
         return -1 * self
 

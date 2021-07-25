@@ -318,7 +318,7 @@ class spline:
         for knot in self.knots[3:-3]:
             tangent = self.tangent(knot)
             normal = vec2(tangent.y, -tangent.x)
-            normal *= 1 / utils.euklidian_norm(normal)
+            normal *= 1 / utils.euclidean_norm(normal)
             interpolation_points[index] += (dist * normal)
             index += 1
 
