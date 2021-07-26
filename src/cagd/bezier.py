@@ -237,19 +237,25 @@ class bezier_patches:
                     new_patches.append(n)
             self.patches = new_patches
 
-    # TODO: implement curvature for all 4 corners by overlapping into different patches too tired to do now :zzz
     def visualize_curvature(self, curvature_mode, color_map):
         all_curvature = []
-        for patch in self.patches:
-            current_curvature = bezier_patches.calculate_curvature(patch, curvature_mode)
-            all_curvature.append(current_curvature)
+        for surface in self.patches:
+            current_surface_curvature = [bezier_patches.calculate_curvature(surface, curvature_mode, x, y) for x in
+                                         range(2) for y in range(2)]
+            surface.set_curvature(*current_surface_curvature)
+            all_curvature.append(current_surface_curvature)
 
-        # set colors according to color map
-        pass
+        # set colors according to color map. All surfaces have their curvature in their patches[i].curvature or
+        # in all_curvature. Curvature points are in the edges with the following order:
+        # u=0 v=0 bottom left, u=0 v=1 top left, u=1 v=0 bottom right,  u=1 v=1 top right
+
+        # for surface in self.patches:
+        #    surface.set_colors(c00, c01, c10, c11)
+
 
     @staticmethod
-    def calculate_curvature(patch, curvature_mode):
-        b_u, b_u_u, b_v, b_v_v, b_u_v = bezier_patches.get_all_derivatives(patch)
+    def calculate_curvature(patch, curvature_mode, x, y):
+        b_u, b_u_u, b_v, b_v_v, b_u_v = bezier_patches.get_all_derivatives(patch, x, y)
         n = b_u.cross_product(b_v) * (1 / utils.euclidean_norm(b_u.cross_product(b_v)))
         g = [b_u.dot(b_u), b_u.dot(b_v), b_v.dot(b_u), b_v.dot(b_v)]
         h = [n.dot(b_u_u), n.dot(b_u_v), n.dot(b_u_v), n.dot(b_v_v)]
@@ -269,13 +275,12 @@ class bezier_patches:
             raise ValueError('Curvature Mode not available!')
 
     @staticmethod
-    def get_all_derivatives(patch):
-        b_u = bezier_patches.partial_derivatives(patch, 'u', 1)[-1][-1]
-        b_u_u = bezier_patches.partial_derivatives(patch, 'u', 2)[-1][0]
-        b_v = bezier_patches.partial_derivatives(patch, 'v', 1)[0][-1]
-        b_v_v = bezier_patches.partial_derivatives(patch, 'v', 2)[0][0]
-        d_u_v = bezier_patches.partial_derivatives(patch, 'both', 2)
-        b_u_v = d_u_v[int(len(d_u_v) / 2)][int(len(d_u_v) / 2)]
+    def get_all_derivatives(patch, x, y):
+        b_u = bezier_patches.partial_derivatives(patch, 'u', 1)[x][y]
+        b_u_u = bezier_patches.partial_derivatives(patch, 'u', 2)[x][y]
+        b_v = bezier_patches.partial_derivatives(patch, 'v', 1)[x][y]
+        b_v_v = bezier_patches.partial_derivatives(patch, 'v', 2)[x][y]
+        b_u_v = bezier_patches.partial_derivatives(patch, 'both', 2)[x][y]
         return b_u, b_u_u, b_v, b_v_v, b_u_v
 
     # creates the k_th derivative in the corresponding direction for a specific patch
