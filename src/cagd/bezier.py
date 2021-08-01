@@ -128,6 +128,9 @@ class bezier_surface:
     def set_curvature(self, c00, c01, c10, c11):
         self.curvature = (c00, c01, c10, c11)
 
+    def get_curvature(self):
+        return self.curvature
+
     def __call__(self, t):
         t1, t2 = t
         return self.evaluate(t1, t2)
@@ -195,6 +198,42 @@ class bezier_surface:
                 right.control_points[i][k] = pts[i][-1]
         return (left, right)
 
+    def calculate_colors(surface, color_map):
+        c = 4 * [(0,0,0)]
+        minValue = min(surface.get_curvature())
+        maxValue = max(surface.get_curvature())
+        for i in range(4):
+            x = surface.get_curvature()[i]
+            if color_map == bezier_patches.COLOR_MAP_CUT:
+                if x < 0:
+                    x = 0
+                elif x > 1:
+                    x = 1
+            elif color_map == bezier_patches.COLOR_MAP_LINEAR:
+                x = (x-minValue)/(maxValue-minValue)
+            elif color_map == bezier_patches.COLOR_MAP_CLASSIFICATION:
+                if x < 0:
+                    x = 0
+                elif x == 0:
+                    x = 0.5
+                else:
+                    x = 1
+            else:
+                raise ValueError('Color map not supported')
+
+            if x > 0 and x <= 0.25:
+                c[i] = (0, 4*x, 1)
+            elif x > 0.25 and x <= 0.5:
+                c[i] = (0, 1, 2 - 4 * x)
+            elif x < 0.5 and x <= 0.75:
+                c[i] = (4 * x, 1, 0)
+            elif x > 0.75 and x <= 1:
+                c[i] = (1, 4 - 4 * x, 0)
+            else:
+                raise ValueError('Curvature value calculaion went wrong')
+        return (c[0], c[1], c[2], c[3])
+
+
 
 class bezier_patches:
     CURVATURE_GAUSSIAN = 0
@@ -248,9 +287,9 @@ class bezier_patches:
         # set colors according to color map. All surfaces have their curvature in their patches[i].curvature or
         # in all_curvature. Curvature points are in the edges with the following order:
         # u=0 v=0 bottom left, u=0 v=1 top left, u=1 v=0 bottom right,  u=1 v=1 top right
-
-        # for surface in self.patches:
-        #    surface.set_colors(c00, c01, c10, c11)
+        for surface in self.patches:
+           c00, c01, c10, c11 = surface.calculate_colors(color_map)
+           surface.set_colors(c00, c01, c10, c11)
 
 
     @staticmethod
