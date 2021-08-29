@@ -79,9 +79,9 @@ def distance(a, b):
 
 def euclidean_norm(a):
     if isinstance(a, vec2):
-        return sqrt(a.x ** 2 + a.y ** 2)
+        return sqrt((a.x ** 2) + (a.y ** 2))
     elif isinstance(a, vec3):
-        return sqrt(a.x ** 2 + a.y ** 2)
+        return sqrt((a.x ** 2) + (a.y ** 2) + (a.z ** 2))
 
 
 def angle(a, b):

@@ -198,10 +198,8 @@ class bezier_surface:
                 right.control_points[i][k] = pts[i][-1]
         return (left, right)
 
-    def calculate_colors(surface, color_map):
+    def calculate_colors(surface, color_map, min_value, max_value):
         c = 4 * [(0, 0, 0)]
-        min_value = min(surface.get_curvature())
-        max_value = max(surface.get_curvature())
         for i in range(4):
             x = surface.get_curvature()[i]
             if color_map == bezier_patches.COLOR_MAP_CUT:
@@ -225,7 +223,7 @@ class bezier_surface:
                 c[i] = (0, 4 * x, 1)
             elif 0.25 < x <= 0.5:
                 c[i] = (0, 1, 2 - (4 * x))
-            elif x < 0.5 and x <= 0.75:
+            elif 0.5 < x <= 0.75:
                 c[i] = ((4 * x)-2, 1, 0)
             elif 0.75 < x <= 1:
                 c[i] = (1, 4 - (4 * x), 0)
@@ -283,11 +281,10 @@ class bezier_patches:
             surface.set_curvature(*current_surface_curvature)
             all_curvature.append(current_surface_curvature)
 
-        # set colors according to color map. All surfaces have their curvature in their patches[i].curvature or
-        # in all_curvature. Curvature points are in the edges with the following order:
-        # u=0 v=0 bottom left, u=0 v=1 top left, u=1 v=0 bottom right,  u=1 v=1 top right
+        min_value = min(map(min, all_curvature))
+        max_value = max(map(max, all_curvature))
         for surface in self.patches:
-            c00, c01, c10, c11 = surface.calculate_colors(color_map)
+            c00, c01, c10, c11 = surface.calculate_colors(color_map, min_value, max_value)
             surface.set_colors(c00, c01, c10, c11)
 
     @staticmethod
@@ -298,7 +295,7 @@ class bezier_patches:
         h = [n.dot(b_u_u), n.dot(b_u_v), n.dot(b_u_v), n.dot(b_v_v)]
 
         gaussian = utils.determinant_m2(h) / utils.determinant_m2(g)
-        average = (h[0] * g[3]) - (2 * h[1] * g[1]) + (h[3] * g[0]) / (2 * ((g[0] * g[3]) - (g[1] * g[1])))
+        average = ((h[0] * g[3]) - (2 * h[1] * g[1]) + (h[3] * g[0])) / (2 * ((g[0] * g[3]) - (g[1] * g[1])))
 
         if curvature_mode == bezier_patches.CURVATURE_GAUSSIAN:
             return gaussian
@@ -340,7 +337,7 @@ class bezier_patches:
             u_factor = int(k / 2)
             v_factor = int(k / 2)
 
-        deriv = [[0] * (n + 1 - v_factor)] * (m + 1 - u_factor)
+        deriv = [[None for col in range((n + 1 - v_factor))] for row in range(m + 1 - u_factor)]
         for i in range(0, m + 1 - u_factor):
             for j in range(0, n + 1 - v_factor):
                 # single case
@@ -349,10 +346,10 @@ class bezier_patches:
                 # multi case
                 elif direction == 'u':
                     deriv[i][j] = scale * (m - 1) * (
-                            control_points[i + 2][j] - 2 * control_points[i + 1][j] + control_points[i][j])
+                            control_points[i + 2][j] - (2 * control_points[i + 1][j]) + control_points[i][j])
                 elif direction == 'v':
                     deriv[i][j] = scale * (n - 1) * (
-                            control_points[i][j + 2] - 2 * control_points[i][j + 1] + control_points[i][j])
+                            control_points[i][j + 2] - (2 * control_points[i][j + 1]) + control_points[i][j])
                 else:
                     deriv[i][j] = n * m * (
                             control_points[i + 1][j + 1] - control_points[i][j + 1] - control_points[i + 1][j] +
