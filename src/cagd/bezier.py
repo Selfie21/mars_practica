@@ -199,9 +199,9 @@ class bezier_surface:
         return (left, right)
 
     def calculate_colors(surface, color_map):
-        c = 4 * [(0,0,0)]
-        minValue = min(surface.get_curvature())
-        maxValue = max(surface.get_curvature())
+        c = 4 * [(0, 0, 0)]
+        min_value = min(surface.get_curvature())
+        max_value = max(surface.get_curvature())
         for i in range(4):
             x = surface.get_curvature()[i]
             if color_map == bezier_patches.COLOR_MAP_CUT:
@@ -210,7 +210,7 @@ class bezier_surface:
                 elif x > 1:
                     x = 1
             elif color_map == bezier_patches.COLOR_MAP_LINEAR:
-                x = (x-minValue)/(maxValue-minValue)
+                x = (x - min_value) / (max_value - min_value)
             elif color_map == bezier_patches.COLOR_MAP_CLASSIFICATION:
                 if x < 0:
                     x = 0
@@ -221,18 +221,17 @@ class bezier_surface:
             else:
                 raise ValueError('Color map not supported')
 
-            if x > 0 and x <= 0.25:
-                c[i] = (0, 4*x, 1)
-            elif x > 0.25 and x <= 0.5:
-                c[i] = (0, 1, 2 - 4 * x)
+            if 0 <= x <= 0.25:
+                c[i] = (0, 4 * x, 1)
+            elif 0.25 < x <= 0.5:
+                c[i] = (0, 1, 2 - (4 * x))
             elif x < 0.5 and x <= 0.75:
-                c[i] = (4 * x, 1, 0)
-            elif x > 0.75 and x <= 1:
-                c[i] = (1, 4 - 4 * x, 0)
+                c[i] = ((4 * x)-2, 1, 0)
+            elif 0.75 < x <= 1:
+                c[i] = (1, 4 - (4 * x), 0)
             else:
-                raise ValueError('Curvature value calculaion went wrong')
-        return (c[0], c[1], c[2], c[3])
-
+                raise ValueError('Curvature value calculation went wrong')
+        return c[0], c[1], c[2], c[3]
 
 
 class bezier_patches:
@@ -288,9 +287,8 @@ class bezier_patches:
         # in all_curvature. Curvature points are in the edges with the following order:
         # u=0 v=0 bottom left, u=0 v=1 top left, u=1 v=0 bottom right,  u=1 v=1 top right
         for surface in self.patches:
-           c00, c01, c10, c11 = surface.calculate_colors(color_map)
-           surface.set_colors(c00, c01, c10, c11)
-
+            c00, c01, c10, c11 = surface.calculate_colors(color_map)
+            surface.set_colors(c00, c01, c10, c11)
 
     @staticmethod
     def calculate_curvature(patch, curvature_mode, x, y):
@@ -315,11 +313,11 @@ class bezier_patches:
 
     @staticmethod
     def get_all_derivatives(patch, x, y):
-        b_u = bezier_patches.partial_derivatives(patch, 'u', 1)[x][y]
-        b_u_u = bezier_patches.partial_derivatives(patch, 'u', 2)[x][y]
-        b_v = bezier_patches.partial_derivatives(patch, 'v', 1)[x][y]
-        b_v_v = bezier_patches.partial_derivatives(patch, 'v', 2)[x][y]
-        b_u_v = bezier_patches.partial_derivatives(patch, 'both', 2)[x][y]
+        b_u = bezier_patches.partial_derivatives(patch, 'u', 1)[-x][-y]
+        b_u_u = bezier_patches.partial_derivatives(patch, 'u', 2)[-x][-y]
+        b_v = bezier_patches.partial_derivatives(patch, 'v', 1)[-x][-y]
+        b_v_v = bezier_patches.partial_derivatives(patch, 'v', 2)[-x][-y]
+        b_u_v = bezier_patches.partial_derivatives(patch, 'both', 2)[-x][-y]
         return b_u, b_u_u, b_v, b_v_v, b_u_v
 
     # creates the k_th derivative in the corresponding direction for a specific patch
