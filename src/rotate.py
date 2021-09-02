@@ -26,12 +26,12 @@ sc.add_element(spl)
 sc.write_image()
 # sc.show()
 
-surface = spl.generate_rotation_surface(24)
+surface = spl.generate_rotation_surface(100)
 
 bezier_patches = surface.to_bezier_patches()
 
-bezier_patches.refine(3)
-path = "surfaces.off"
+bezier_patches.refine(2)
+path = "ex4.off"
 f = open(path, 'w')
 f.write(bezier_patches.export_off())
 f.close()

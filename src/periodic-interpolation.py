@@ -51,3 +51,4 @@ print(abs(deviation))
 
 sc.write_image()
 sc.show()
+sc.write_to_file("ex2.png")

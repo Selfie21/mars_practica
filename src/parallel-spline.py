@@ -21,6 +21,7 @@ for i in [-1, 1]:
 
 sc.write_image()
 sc.show()
+sc.write_to_file("ex3_1.png")
 
 # KIT
 ptsK = [vec2(0, 1), vec2(0, 0), vec2(.25, .5), vec2(.5, 1), vec2(.25, .5), vec2(.5, 0)]
@@ -43,3 +44,4 @@ sc.add_element(sT)
 sc.add_element(paraK)
 sc.write_image()
 sc.show()
+sc.write_to_file("ex3_2.png")

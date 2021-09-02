@@ -290,12 +290,17 @@ class bezier_patches:
     @staticmethod
     def calculate_curvature(patch, curvature_mode, x, y):
         b_u, b_u_u, b_v, b_v_v, b_u_v = bezier_patches.get_all_derivatives(patch, x, y)
-        n = b_u.cross_product(b_v) * (1 / utils.euclidean_norm(b_u.cross_product(b_v)))
-        g = [b_u.dot(b_u), b_u.dot(b_v), b_v.dot(b_u), b_v.dot(b_v)]
-        h = [n.dot(b_u_u), n.dot(b_u_v), n.dot(b_u_v), n.dot(b_v_v)]
-
-        gaussian = utils.determinant_m2(h) / utils.determinant_m2(g)
-        average = ((h[0] * g[3]) - (2 * h[1] * g[1]) + (h[3] * g[0])) / (2 * ((g[0] * g[3]) - (g[1] * g[1])))
+        
+        if utils.euclidean_norm(b_u.cross_product(b_v)) == 0:
+        	gaussian = 0
+        	average = 0
+        else:
+        	n = b_u.cross_product(b_v) * (1 / utils.euclidean_norm(b_u.cross_product(b_v)))
+        	g = [b_u.dot(b_u), b_u.dot(b_v), b_v.dot(b_u), b_v.dot(b_v)]
+        	h = [n.dot(b_u_u), n.dot(b_u_v), n.dot(b_u_v), n.dot(b_v_v)]
+	
+        	gaussian = utils.determinant_m2(h) / utils.determinant_m2(g)
+        	average = ((h[0] * g[3]) - (2 * h[1] * g[1]) + (h[3] * g[0])) / (2 * ((g[0] * g[3]) - (g[1] * g[1])))
 
         if curvature_mode == bezier_patches.CURVATURE_GAUSSIAN:
             return gaussian

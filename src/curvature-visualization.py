@@ -19,7 +19,7 @@ surface.knots = (ku, kv)
 bezier_patches = surface.to_bezier_patches()
 bezier_patches.visualize_curvature(bezier_patches.CURVATURE_AVERAGE, bezier_patches.COLOR_MAP_LINEAR)
 
-path = "surfaces.off"
+path = "ex5.off"
 f = open(path, 'w')
 f.write(bezier_patches.export_off())
 f.close()

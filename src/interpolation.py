@@ -66,4 +66,4 @@ sc.add_element(s3)
 sc.add_element(s4)
 sc.write_image()  # compose all elements in the scene
 sc.show()  # tries to show the image with a default viewer
-sc.write_to_file("test.png")  # saves the image to a file
+sc.write_to_file("ex1.png")  # saves the image to a file
