@@ -496,8 +496,8 @@ class spline_surface:
                 self.insert_knot(self.DIR_V, knot)
                 p += 1
 
-        for i in range(0, len(self.control_points) - 4, 3):
-            for j in range(0, len(self.control_points[i]) - 4, 3):
+        for i in range(0, len(self.control_points)-3, 3):
+            for j in range(0, len(self.control_points[i])-4, 3):
                 surface = bezier_surface((m, n))
                 control_points_for_srf = [self.control_points[i][j:(j + n + 1)] for i in range(i, (i + m + 1))]
                 surface.control_points = control_points_for_srf
